@@ -34,6 +34,9 @@ module.exports = {
       forking: {
         url: "https://polygon-rpc.com/", // "https://rpc-mumbai.maticvigil.com/", // `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
       },
+      accounts: {
+        count: 50,
+      },
     },
 
     localhost: {
