@@ -19,10 +19,10 @@ describe("Bet5Game", () => {
     signers,
     WINNER_COUNT,
     NUM_USER_SELECTION,
-    MAX_POOL_ENTRY,
+    MIN_ENTRY_COUNT,
     POOL_ENTRY_INTERVAL,
     POOL_START_INTERVAL,
-    POOL_MIN_DURATION;
+    POOL_DURATION;
 
   beforeEach(async () => {});
 
@@ -47,7 +47,8 @@ describe("Bet5Game", () => {
     NUM_USER_SELECTION = await poolContract.NUM_USER_SELECTION();
     POOL_ENTRY_INTERVAL = Number(await poolContract.POOL_ENTRY_INTERVAL());
     POOL_START_INTERVAL = Number(await poolContract.POOL_START_INTERVAL());
-    POOL_MIN_DURATION = Number(await poolContract.POOL_MIN_DURATION());
+    POOL_DURATION = Number(await poolContract.POOL_DURATION());
+    MIN_ENTRY_COUNT = Number(await poolContract.MIN_ENTRY_COUNT());
   });
 
   describe.skip("deployment", () => {
@@ -59,63 +60,55 @@ describe("Bet5Game", () => {
   });
 
   describe.skip("createPool", () => {
-    describe("with invalid params", () => {
+    describe("with invalid entry fee", () => {
       it("throws an error", async () => {
-        const startTime = ethers.BigNumber.from(Math.round(Date.now() / 1000));
-        const endTime = startTime.add(ethers.BigNumber.from(POOL_MIN_DURATION));
-        const entryFee = ethers.BigNumber.from(1000);
+        // const startTime = ethers.BigNumber.from(Math.round(Date.now() / 1000));
+        // const endTime = startTime.add(ethers.BigNumber.from(POOL_DURATION));
 
         const [owner] = signers;
 
-        await expect(
-          poolContract
-            .connect(owner)
-            .createPool(startTime, endTime, entryFee, token.address)
-        ).to.be.revertedWith("Increase start time");
+        // await expect(
+        //   poolContract
+        //     .connect(owner)
+        //     .createPool(entryFee, token.address)
+        // ).to.be.revertedWith("Increase start time");
+
+        // await expect(
+        //   poolContract
+        //     .connect(owner)
+        //     .createPool(
+        //       startTime.add(ethers.BigNumber.from(POOL_START_INTERVAL)),
+        //       endTime,
+        //       entryFee,
+        //       token.address
+        //     )
+        // ).to.be.revertedWith("Increase end time");
 
         await expect(
-          poolContract
-            .connect(owner)
-            .createPool(
-              startTime.add(ethers.BigNumber.from(POOL_START_INTERVAL)),
-              endTime,
-              entryFee,
-              token.address
-            )
-        ).to.be.revertedWith("Increase end time");
-
-        await expect(
-          poolContract
-            .connect(owner)
-            .createPool(
-              startTime.add(ethers.BigNumber.from(POOL_START_INTERVAL)),
-              endTime.add(ethers.BigNumber.from(POOL_MIN_DURATION)),
-              0,
-              token.address
-            )
+          poolContract.connect(owner).createPool(0, token.address)
         ).to.be.revertedWith("Increase entry fee");
       });
     });
 
-    describe("with valid params", () => {
+    describe("with valid entry fee", () => {
       it("creates a new pool", async () => {
-        const startTime = ethers.BigNumber.from(
-          Math.round(Date.now() / 1000) + POOL_START_INTERVAL
-        );
-        const endTime = startTime.add(ethers.BigNumber.from(POOL_MIN_DURATION));
+        // const startTime = ethers.BigNumber.from(
+        //   Math.round(Date.now() / 1000) + POOL_START_INTERVAL
+        // );
+        // const endTime = startTime.add(ethers.BigNumber.from(POOL_DURATION));
         const entryFee = ethers.BigNumber.from(1000);
 
         const [owner] = signers;
 
         const tx = await poolContract
           .connect(owner)
-          .createPool(startTime, endTime, entryFee, token.address);
+          .createPool(entryFee, token.address);
         const { events } = await tx.wait();
         const { poolId } = events[events.length - 1].args;
         const newPool = await poolContract.pools(poolId);
 
-        expect(newPool.startTime).to.equal(startTime);
-        expect(newPool.endTime).to.equal(endTime);
+        expect(newPool.startTime).to.not.be.null;
+        expect(newPool.endTime).to.not.be.null;
         expect(newPool.entryFee).to.equal(entryFee);
       });
     });
@@ -164,7 +157,7 @@ describe("Bet5Game", () => {
 
     describe("after entry time", () => {
       before(async () => {
-        await ethers.provider.send("evm_increaseTime", [POOL_MIN_DURATION]);
+        await ethers.provider.send("evm_increaseTime", [POOL_DURATION]);
       });
 
       it("throws an error", async () => {
@@ -180,24 +173,75 @@ describe("Bet5Game", () => {
     });
   });
 
-  describe.skip("cancelPool", () => {});
+  describe("cancelPool", () => {
+    let poolId;
 
-  describe("claimReward", () => {
+    before(async () => {
+      poolId = await poolContract.poolCounter();
+    });
+
+    describe("before start time", () => {
+      it("throws an error", async () => {
+        await expect(poolContract.cancelPool(poolId)).to.be.revertedWith(
+          "Pool not started"
+        );
+      });
+    });
+
+    describe("with enough entries", () => {
+      before(async () => {
+        await ethers.provider.send("evm_increaseTime", [
+          POOL_START_INTERVAL - 100,
+        ]);
+
+        // add `MIN_ENTRY_COUNT` user entries
+        for (let i = 0; i < MIN_ENTRY_COUNT; i++) {
+          const tx = await poolContract
+            .connect(signers[i])
+            .enterPool(poolId, [BTC, ETH, BNB, ADA, DOT]);
+          await tx.wait();
+        }
+
+        await ethers.provider.send("evm_increaseTime", [1000]);
+      });
+
+      it("throws an error", async () => {
+        await expect(
+          poolContract.connect(owner).cancelPool(poolId)
+        ).to.be.revertedWith("Entry count exceeds cancel limit");
+      });
+    });
+
+    describe("without enough entries", () => {
+      before(async () => {
+        // create pool
+        const entryFee = ethers.BigNumber.from("1000000000000000000000000");
+
+        [owner] = signers;
+
+        const tx = await poolContract
+          .connect(owner)
+          .createPool(entryFee, token.address);
+        const { events } = await tx.wait();
+        const { poolId: id } = events[events.length - 1].args;
+        poolId = id;
+      });
+      it("cancels the pool", async () => {});
+    });
+  });
+
+  describe.skip("distributeRewards", () => {
     let poolId;
 
     before(async () => {
       // create pool
-      const startTime = ethers.BigNumber.from(
-        Math.round(Date.now() / 1000) + POOL_START_INTERVAL
-      );
-      const endTime = startTime.add(ethers.BigNumber.from(POOL_MIN_DURATION));
       const entryFee = ethers.BigNumber.from("1000000000000000000000000");
 
       const [owner] = signers;
 
       const tx = await poolContract
         .connect(owner)
-        .createPool(startTime, endTime, entryFee, token.address);
+        .createPool(entryFee, token.address);
       const { events } = await tx.wait();
       const { poolId: id } = events[events.length - 1].args;
       poolId = id;
@@ -234,17 +278,13 @@ describe("Bet5Game", () => {
 
     describe("after pool end time", () => {
       before(async () => {
-        await ethers.provider.send("evm_increaseTime", [
-          POOL_MIN_DURATION + 1000,
-        ]);
+        await ethers.provider.send("evm_increaseTime", [POOL_DURATION + 1000]);
       });
 
       it("gives out pool reward", async () => {
         const tx = await poolContract.connect(signers[1]).claimReward(poolId);
         const { events } = await tx.wait();
         const { amount } = events[events.length - 1].args;
-
-        console.log(ethers.utils.formatUnits(amount, "ether"));
       });
     });
   });
@@ -255,6 +295,4 @@ describe("Bet5Game", () => {
 // const txFee = gasEstimate * gasPrice;
 // console.log(`Tx fee: ${ethers.utils.formatUnits(txFee, "ether")} ETH`);
 
-// keeper to start pool - can it iterate through all users' every token to set initial price?
-// keeper to end pool - can it iterate through all users' every token to set final price?
 // estimate gas and check max limit of `NMUM_USER_SELECTION` and `MAX_ENTRY_COUNT`

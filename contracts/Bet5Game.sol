@@ -3,32 +3,38 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 
-import "hardhat/console.sol";
-
 /**
     @title A betting game for users to predict top performing crypto tokens and win pool rewards
-    @author Dhruv Takwal
   */
-contract Bet5Game is Ownable, KeeperCompatibleInterface {
+contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
     uint16 private constant DENOMINATOR = 10000;
     uint8 public constant WINNER_COUNT = 3;
     uint8 public constant MIN_ENTRY_COUNT = 6;
-    uint8 public constant MAX_ENTRY_COUNT = 20;
+    uint8 public constant MAX_ENTRY_COUNT = 30;
     uint8 public constant NUM_USER_SELECTION = 5;
     uint16 public constant FEE = 500;
-    uint256 public constant POOL_ENTRY_INTERVAL = 30 minutes;
-    uint256 public constant POOL_START_INTERVAL = 1 days;
-    uint256 public constant POOL_MIN_DURATION = 1 days;
+    uint256 public constant POOL_ENTRY_INTERVAL = 2 minutes; // 30 minutes;
+    uint256 public constant POOL_START_INTERVAL = 3 minutes; // 1 days;
+    uint256 public constant POOL_DURATION = 5 minutes; // 1 days;
+
+    enum Status {
+        ACTIVE,
+        CANCELLED,
+        COMPLETE
+    }
 
     struct Pool {
-        uint80 startTime;
-        uint80 endTime;
+        uint256 startTime;
+        uint256 endTime;
         uint256 entryFee;
         address token;
         address[] entries;
+        address[WINNER_COUNT] winners;
+        Status status;
     }
 
     struct UserEntry {
@@ -37,6 +43,7 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
     }
 
     uint256 public poolCounter;
+    uint256 public keeperPoolCounter;
 
     mapping(address => uint256) public feeCollected;
     mapping(uint256 => Pool) public pools;
@@ -44,8 +51,8 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
 
     event PoolCreated(
         uint256 poolId,
-        uint128 startTime,
-        uint128 endTime,
+        uint256 startTime,
+        uint256 endTime,
         uint256 entryFee
     );
     event PoolEntered(
@@ -55,29 +62,19 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
         int256[NUM_USER_SELECTION] prices
     );
     event PoolCancelled(uint256 poolId);
-    event PoolRewardClaim(uint256 poolId, uint256 amount, address winner);
+    event PoolRewardTransfer(uint256 poolId, uint256 amount, address winner);
+    event FeeWithdrawn(address token, uint256 amount);
+
+    constructor() {
+        keeperPoolCounter = 1;
+    }
 
     /**
         @notice Create a new pool for users to enter and select tokens
-        @param _startTime timestamp when the stops accepting new entries 
-        @param _endTime timestamp when net points are calculated to decide winners
         @param _entryFee amount of accepted tokens to be deposited by user to enter pool
         @param _token accepted token of the pool in terms of which the entry fee is based
      */
-    function createPool(
-        uint80 _startTime,
-        uint80 _endTime,
-        uint256 _entryFee,
-        address _token
-    ) external onlyOwner {
-        require(
-            _startTime >= block.timestamp + POOL_START_INTERVAL,
-            "Increase start time"
-        );
-        require(
-            _endTime >= _startTime + POOL_MIN_DURATION,
-            "Increase end time"
-        );
+    function createPool(uint256 _entryFee, address _token) external onlyOwner {
         require(_entryFee > 0, "Increase entry fee");
         require(
             bytes(ERC20(_token).name()).length > 0,
@@ -85,12 +82,21 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
         );
 
         uint256 poolId = ++poolCounter;
-        pools[poolId].startTime = _startTime;
-        pools[poolId].endTime = _endTime;
+        pools[poolId].startTime = block.timestamp + POOL_START_INTERVAL;
+        pools[poolId].endTime =
+            block.timestamp +
+            POOL_START_INTERVAL +
+            POOL_DURATION;
         pools[poolId].entryFee = _entryFee;
         pools[poolId].token = _token;
+        pools[poolId].status = Status.ACTIVE;
 
-        emit PoolCreated(poolId, _startTime, _endTime, _entryFee);
+        emit PoolCreated(
+            poolId,
+            pools[poolId].startTime,
+            pools[poolId].endTime,
+            _entryFee
+        );
     }
 
     /**
@@ -101,7 +107,7 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
     function enterPool(
         uint256 _poolId,
         address[NUM_USER_SELECTION] memory _tokens
-    ) external {
+    ) external nonReentrant {
         Pool storage pool = pools[_poolId];
 
         require(
@@ -114,8 +120,6 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
             "Invalid token selection"
         );
         require(pool.entries.length < MAX_ENTRY_COUNT, "Pool limit reached");
-
-        // do the tokens need to be unique?
 
         bool newEntry = userPoolEntries[_poolId][msg.sender].tokens[0] ==
             address(0);
@@ -131,7 +135,6 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
         }
 
         if (newEntry) {
-            // pool.entryCount++;
             pool.entries.push(msg.sender);
 
             ERC20(pool.token).transferFrom(
@@ -150,8 +153,8 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
     }
 
     /**
-        @notice Disbales additional entries and returns the deposited tokens of users
-        @param _poolId Unique ID of the pool to cancel if number of entries is less than `MIN_ENTRY_COUNT`
+        @notice Disbales additional entries and returns the deposited tokens of users if number of entries is less than `MIN_ENTRY_COUNT`
+        @param _poolId Unique ID of the pool to cancel
      */
     function cancelPool(uint256 _poolId) public {
         Pool storage pool = pools[_poolId];
@@ -164,6 +167,7 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
         );
 
         pool.endTime = pool.startTime;
+        pool.status = Status.CANCELLED;
 
         for (uint8 i = 0; i < pool.entries.length; i++) {
             ERC20(pool.token).transfer(pool.entries[i], pool.entryFee);
@@ -173,56 +177,132 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
     }
 
     /**
-        @notice Gives out reward to user based upon their position, if in top `WINNER_COUNT`, in the pool
-        @param _poolId Unique ID of the pool in which the user entered
+        @notice Distributes pool rewards to winners based on gains of token selection
+        @param _poolId Unique ID of the pool to distribute rewards to winners
      */
-    function claimReward(uint256 _poolId) external {
-        Pool memory pool = pools[_poolId];
+    function distributeRewards(uint256 _poolId) public nonReentrant {
+        Pool storage pool = pools[_poolId];
 
-        require(
-            userPoolEntries[_poolId][msg.sender].tokens[0] != address(0),
-            "Reward claimed"
-        );
-        require(block.timestamp > pool.endTime, "Pool in progress");
+        require(block.timestamp >= pool.endTime, "Pool in progress");
+        require(pool.winners[0] == address(0), "Rewards already distributed");
 
-        uint256 position = _getPoolPosition(_poolId, msg.sender);
+        (address[WINNER_COUNT] memory winners, ) = leaderboard(_poolId);
 
-        require(position <= WINNER_COUNT, "Only winner can claim");
+        pool.status = Status.COMPLETE;
+        pool.winners = winners;
 
-        // this gives error when calculating points for subsequent users
-        delete userPoolEntries[_poolId][msg.sender];
+        uint256 fee = (pool.entries.length * pool.entryFee * FEE) / DENOMINATOR;
+        feeCollected[pool.token] += fee;
+        uint256 rewards = pool.entries.length * pool.entryFee - fee;
 
-        // hard coded, will have to be modified if `WINNER_COUNT` is changed
-        // 1st : 2nd : 3rd :: 5 : 3 : 2
+        for (uint8 i = 0; i < WINNER_COUNT; i++) {
+            address winner = winners[i];
 
-        uint256 reward = 0;
-        if (position == 1) {
-            reward = (pool.entryFee * pool.entries.length * 5) / 10;
-        } else if (position == 2) {
-            reward = (pool.entryFee * pool.entries.length * 3) / 10;
-        } else if (position == 3) {
-            reward = (pool.entryFee * pool.entries.length * 2) / 10;
+            // hard coded, will have to be modified if `WINNER_COUNT` is changed
+
+            uint256 amount = (rewards * (WINNER_COUNT - i)) / 6;
+            ERC20(pool.token).transfer(winner, amount);
+
+            emit PoolRewardTransfer(keeperPoolCounter, amount, winner);
+        }
+    }
+
+    /**
+        @notice Transfers the collected fee of the provided token to owner address
+        @param _token Address of token to withdraw collected fee
+    */
+    function withdrawFees(address _token) external nonReentrant onlyOwner {
+        require(feeCollected[_token] > 0, "No fee to collect");
+
+        uint256 amount = feeCollected[_token];
+        delete feeCollected[_token];
+
+        ERC20(_token).transfer(msg.sender, amount);
+
+        emit FeeWithdrawn(_token, amount);
+    }
+
+    /**
+        @notice Keeper function to automatically cancel pool or distribute pool rewards
+     */
+    function performUpkeep(
+        bytes calldata /* performData */
+    ) external override {
+        Pool memory pool = pools[keeperPoolCounter];
+        if (
+            block.timestamp >= pool.startTime &&
+            pool.entries.length < MIN_ENTRY_COUNT
+        ) {
+            cancelPool(keeperPoolCounter++);
+        } else if (block.timestamp > pool.endTime) {
+            distributeRewards(keeperPoolCounter++);
+        }
+    }
+
+    // --------------------- VIEW FUNCTIONS ---------------------
+
+    /**
+        @notice Keeper function to check if any pool needs to be cancelled or to distribute rewards
+     */
+    function checkUpkeep(
+        bytes calldata /* checkData */
+    ) external override returns (bool upkeepNeeded, bytes memory) {
+        Pool memory pool = pools[keeperPoolCounter];
+
+        // pool should exist (invalid case)
+        // by start time it does not have enough entries (cancel case)
+        // crosses end time (reward winners case)
+        upkeepNeeded =
+            keeperPoolCounter <= poolCounter &&
+            ((block.timestamp >= pool.startTime &&
+                pool.entries.length < MIN_ENTRY_COUNT) ||
+                block.timestamp > pool.endTime);
+    }
+
+    /**
+        @param _poolId Unique ID of the pool
+        @param _address User address of which points are to be calculated
+        @return Number of points till current time based upon their pool token selection
+     */
+    function getNetPoints(uint256 _poolId, address _address)
+        public
+        view
+        returns (int256)
+    {
+        require(pools[_poolId].status == Status.ACTIVE, "Pool not active");
+
+        int256 netPoints = 0;
+
+        for (uint8 i = 0; i < NUM_USER_SELECTION; i++) {
+            AggregatorV3Interface aggregator = AggregatorV3Interface(
+                userPoolEntries[_poolId][_address].tokens[i]
+            );
+            (, int256 price, , , ) = aggregator.latestRoundData();
+            netPoints +=
+                ((price - userPoolEntries[_poolId][_address].prices[i]) *
+                    int256(uint256(DENOMINATOR))) /
+                userPoolEntries[_poolId][_address].prices[i];
         }
 
-        uint256 fee = (reward * FEE) / DENOMINATOR;
-        feeCollected[pool.token] += fee;
-        ERC20(pool.token).transfer(msg.sender, reward - fee);
-
-        emit PoolRewardClaim(_poolId, reward, msg.sender);
+        return netPoints / int256(uint256(NUM_USER_SELECTION));
     }
 
     /**
         @notice Calculates the position of a user in a pool based upon the gains of their selected tokens
-        @param _poolId Unique ID of the pool of which user position is to be calculated
-        @return Position of the user among all the pool entries, with 1 being the best
+        @param _poolId Unique ID of the pool
+        @param _address User address of which position and points are to be calculated
+        @return Position and net points of the user among all the pool entries
      */
-    function _getPoolPosition(uint256 _poolId, address _address)
-        public
+    function getPoolPosition(uint256 _poolId, address _address)
+        external
         view
-        returns (uint256)
+        returns (uint256, int256)
     {
+        require(block.timestamp > pools[_poolId].startTime, "Pool not started");
+        require(block.timestamp <= pools[_poolId].endTime, "Pool has ended");
+
         address[] memory entries = pools[_poolId].entries;
-        int256 netPoints = _getNetPoints(_poolId, _address);
+        int256 netPoints = getNetPoints(_poolId, _address);
         uint256 count = 1;
         uint256 userIndex = entries.length;
 
@@ -231,16 +311,16 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
             if (user == _address) {
                 userIndex = i;
             }
-            if (netPoints < _getNetPoints(_poolId, user)) {
+            if (netPoints < getNetPoints(_poolId, user)) {
                 count++;
             } else if (
-                netPoints == _getNetPoints(_poolId, user) && userIndex > i
+                netPoints == getNetPoints(_poolId, user) && userIndex > i
             ) {
                 count++;
             }
         }
 
-        return count;
+        return (count, netPoints);
     }
 
     /**
@@ -273,19 +353,20 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
         @return List of top `WINNER_COUNT` users and their respective points in descending order of points
      */
     function leaderboard(uint256 _poolId)
-        external
+        public
         view
         returns (address[WINNER_COUNT] memory, int256[WINNER_COUNT] memory)
     {
         Pool memory pool = pools[_poolId];
 
-        require(pool.entries.length > MIN_ENTRY_COUNT, "Add more entries");
+        require(pool.entries.length >= MIN_ENTRY_COUNT, "Add more entries");
+        require(pool.status == Status.ACTIVE, "Pool not active");
 
         address[WINNER_COUNT] memory winners;
         int256[WINNER_COUNT] memory netPoints;
 
         for (uint8 i = 0; i < pool.entries.length; i++) {
-            int256 points = _getNetPoints(_poolId, pool.entries[i]);
+            int256 points = getNetPoints(_poolId, pool.entries[i]);
 
             // hard coded, will have to be modified if `WINNER_COUNT` is changed
 
@@ -312,38 +393,4 @@ contract Bet5Game is Ownable, KeeperCompatibleInterface {
 
         return (winners, netPoints);
     }
-
-    /**
-        @param _poolId Unique ID of the pool
-        @param _address User address of which points are to be calculated
-        @return Number of points till current time based upon their pool token selection
-     */
-    function _getNetPoints(uint256 _poolId, address _address)
-        public
-        view
-        returns (int256)
-    {
-        int256 netPoints = 0;
-
-        for (uint8 i = 0; i < NUM_USER_SELECTION; i++) {
-            AggregatorV3Interface aggregator = AggregatorV3Interface(
-                userPoolEntries[_poolId][_address].tokens[i]
-            );
-            (, int256 price, , , ) = aggregator.latestRoundData();
-            netPoints +=
-                ((price - userPoolEntries[_poolId][_address].prices[i]) *
-                    int256(uint256(DENOMINATOR))) /
-                userPoolEntries[_poolId][_address].prices[i];
-        }
-
-        return netPoints / int256(uint256(NUM_USER_SELECTION));
-    }
-
-    function checkUpkeep(
-        bytes calldata /* checkData */
-    ) external override returns (bool upkeepNeeded, bytes memory) {}
-
-    function performUpkeep(
-        bytes calldata /* performData */
-    ) external override {}
 }

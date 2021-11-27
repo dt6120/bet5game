@@ -4,7 +4,7 @@ const main = async () => {
   // await hre.run('compile');
 
   const Token = await ethers.getContractFactory("contracts/Token.sol:Token");
-  const token = await Token.deploy("Unify", "UNF");
+  const token = await Token.deploy("Token", "TOKEN");
 
   await token.deployed();
 

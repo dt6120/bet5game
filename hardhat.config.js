@@ -35,7 +35,7 @@ module.exports = {
         url: "https://polygon-rpc.com/", // "https://rpc-mumbai.maticvigil.com/", // `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
       },
       accounts: {
-        count: 50,
+        count: 20,
       },
     },
 
@@ -81,7 +81,7 @@ module.exports = {
         mnemonic: process.env.MNEMONIC,
         path: "m/44'/60'/0'/0",
         initialIndex: 0,
-        count: 5,
+        count: 20,
       },
       saveDeployments: true,
     },
@@ -118,6 +118,6 @@ module.exports = {
   },
 
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.POLYGONSCAN_API_KEY,
   },
 };
