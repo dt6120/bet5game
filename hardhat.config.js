@@ -40,7 +40,7 @@ module.exports = {
     },
 
     localhost: {
-      url: "https://127.0.0.1:8545",
+      url: "http://0.0.0.0:8545",
       // chainId: 8545,
       accounts: {
         mnemonic: process.env.MNEMONIC,

@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import getProvider from "../ethereum/getProvider";
+import { useDispatch, useSelector } from "react-redux";
+import { connectWallet, disconnect, update } from "../redux/user/walletSlice";
 
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
@@ -25,6 +28,9 @@ const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
 
+  const dispatch = useDispatch();
+  const { loading, address } = useSelector((state) => state.wallet);
+
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -41,17 +47,28 @@ const Navbar = () => {
   };
 
   const handleConnectWallet = async () => {
-    setAnchorElUser(null);
-    !window.ethereum.selectedAddress && toast("Approve MetaMask popup");
-    try {
-      const [account] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      toast(`Connected to ${account.substring(0, 7)}...`);
-    } catch (error) {
-      toast(error.message);
+    const provider = await getProvider();
+
+    if (!address) {
+      dispatch(connectWallet());
+    } else {
+      dispatch(disconnect());
     }
+    setAnchorElUser(null);
   };
+
+  useEffect(() => {
+    const handleAccountsChanged = ([account]) => dispatch(update(account));
+
+    getProvider().then((provider) => {
+      if (!provider) return;
+      if (provider?.selectedAddress) {
+        dispatch(connectWallet());
+      }
+      provider.removeListener("accountsChanged", handleAccountsChanged);
+      provider.on("accountsChanged", handleAccountsChanged);
+    });
+  }, []);
 
   return (
     <AppBar position="static">
@@ -136,41 +153,59 @@ const Navbar = () => {
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src={UserAvatar} />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: "45px" }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem
-                  key={setting}
-                  onClick={handleCloseUserMenu}
-                  component={Link}
-                  to={`/${setting.toLowerCase()}`}
+            {!address ? (
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleConnectWallet}
+                disabled={loading}
+              >
+                Connect Wallet
+              </Button>
+            ) : (
+              <>
+                <Tooltip title="Open settings">
+                  <Chip
+                    avatar={<Avatar alt="Remy Sharp" src={UserAvatar} />}
+                    label={`${address.substring(0, 10)}...`}
+                    variant="contained"
+                    size="large"
+                    color="secondary"
+                    onClick={handleOpenUserMenu}
+                  />
+                </Tooltip>
+                <Menu
+                  sx={{ mt: "45px" }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
                 >
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-              <MenuItem onClick={handleConnectWallet}>
-                <Typography textAlign="center">Connect</Typography>
-              </MenuItem>
-            </Menu>
+                  {settings.map((setting) => (
+                    <MenuItem
+                      key={setting}
+                      onClick={handleCloseUserMenu}
+                      component={Link}
+                      to={`/${setting.toLowerCase()}`}
+                    >
+                      <Typography textAlign="center">{setting}</Typography>
+                    </MenuItem>
+                  ))}
+                  <MenuItem onClick={handleConnectWallet} disabled={loading}>
+                    <Typography textAlign="center">Disconnect</Typography>
+                  </MenuItem>
+                </Menu>
+              </>
+            )}
           </Box>
         </Toolbar>
       </Container>

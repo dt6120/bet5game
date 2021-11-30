@@ -46,6 +46,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
     uint256 public keeperPoolCounter;
 
     mapping(address => uint256) public feeCollected;
+    mapping(address => uint256) public poolsEntered;
     mapping(uint256 => Pool) public pools;
     mapping(uint256 => mapping(address => UserEntry)) internal userPoolEntries;
 
@@ -53,6 +54,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
         uint256 poolId,
         uint256 startTime,
         uint256 endTime,
+        address token,
         uint256 entryFee
     );
     event PoolEntered(
@@ -95,6 +97,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
             poolId,
             pools[poolId].startTime,
             pools[poolId].endTime,
+            _token,
             _entryFee
         );
     }
@@ -124,6 +127,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
         bool newEntry = userPoolEntries[_poolId][msg.sender].tokens[0] ==
             address(0);
         userPoolEntries[_poolId][msg.sender].tokens = _tokens;
+        poolsEntered[msg.sender] += 1;
 
         for (uint8 i = 0; i < NUM_USER_SELECTION; i++) {
             AggregatorV3Interface aggregator = AggregatorV3Interface(
@@ -170,6 +174,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
         pool.status = Status.CANCELLED;
 
         for (uint8 i = 0; i < pool.entries.length; i++) {
+            poolsEntered[pool.entries[i]] -= 1;
             ERC20(pool.token).transfer(pool.entries[i], pool.entryFee);
         }
 
@@ -333,6 +338,20 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
         returns (address[] memory)
     {
         return pools[_poolId].entries;
+    }
+
+    /**
+        @param _poolId Unique ID of the pool
+        @return List of winners after pool has ended
+    */
+    function getPoolWinners(uint256 _poolId)
+        external
+        view
+        returns (address[WINNER_COUNT] memory)
+    {
+        require(pools[_poolId].status == Status.COMPLETE, "Pool has not ended");
+
+        return pools[_poolId].winners;
     }
 
     /**
