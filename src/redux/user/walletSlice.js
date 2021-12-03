@@ -17,7 +17,7 @@ export const connectWallet = createAsyncThunk(
         return rejectWithValue("No web3 provider found");
       }
 
-      const [account] = await provider.request({
+      const [account] = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
 

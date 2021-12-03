@@ -5,7 +5,7 @@ import { contracts } from "./artifacts.json";
 
 const getTokenData = async (tokenAddress) => {
   const { Token } = contracts;
-  const provider = await getProvider();
+  const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
 
   const tokenContract = new ethers.Contract(tokenAddress, Token.abi, provider);
 

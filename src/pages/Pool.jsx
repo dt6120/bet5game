@@ -3,6 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import Countdown from "react-countdown";
 import { toast } from "react-toastify";
+import { Chart } from "react-google-charts";
+
+import { fetchPoolData, enterPool } from "../redux/pool/poolSlice";
+import getAggregatorData from "../ethereum/getAggregatorData";
 
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
@@ -167,6 +171,7 @@ const Pool = () => {
 
   const dispatch = useDispatch();
   const userAddress = useSelector((state) => state.wallet.address);
+  const { txLoading, txHash } = useSelector((state) => state.pool);
 
   const [tokensOpen, setTokensOpen] = useState(false);
   const [viewTokens, setViewTokens] = useState([]);
@@ -177,7 +182,7 @@ const Pool = () => {
   const [currentToken, setCurrentToken] = useState("");
   const [selectedTokens, setSelectedTokens] = useState([]);
 
-  const handleEnterPool = () => {
+  const handleEnterPoolDialogue = () => {
     if (!userAddress) {
       toast.error("Connect wallet to enter pool");
       return;
@@ -185,18 +190,44 @@ const Pool = () => {
     setFormOpen(true);
   };
 
-  const handleTokenAdd = () => {
-    // if (selectedTokens.length === 5) {
-    //   toast.error("Cannot select more than 5 token");
-    //   return;
-    // }
-
-    // check if token is valid
-    setSelectedTokens([...selectedTokens, currentToken]);
+  const handleTokenAdd = async () => {
+    try {
+      const { roundPrice } = await getAggregatorData(currentToken);
+      setSelectedTokens([
+        ...selectedTokens,
+        { price: roundPrice, address: currentToken },
+      ]);
+    } catch (error) {
+      toast.error("Invalid aggregator address");
+    }
   };
+
   const handleTokenDelete = (id) => {
     setSelectedTokens(selectedTokens.filter((token, index) => index !== id));
   };
+
+  const handleEnterPool = () => {
+    dispatch(
+      enterPool({
+        id: poolId,
+        tokens: selectedTokens.map(({ address }) => address),
+      })
+    );
+  };
+
+  useEffect(() => {
+    dispatch(fetchPoolData(poolId));
+  }, []);
+
+  useEffect(() => {
+    if (txHash) {
+      setSelectedTokens([]);
+      setCurrentToken("");
+      setFormOpen(false);
+
+      dispatch(fetchPoolData(poolId));
+    }
+  }, [txHash]);
 
   return (
     <Container sx={{ marginTop: 10 }}>
@@ -256,7 +287,7 @@ const Pool = () => {
       </Grid>
       {Date.now() < pool.startTime && (
         <Grid container spacing={3} sx={{ marginTop: 3 }}>
-          <Grid item xs={10}>
+          <Grid item xs={9}>
             {Date.now() < pool.startTime - 3600000 ? (
               <Alert severity="error">
                 Pool entry starts shortly. Time left: &nbsp;
@@ -275,13 +306,13 @@ const Pool = () => {
             )}
           </Grid>
 
-          <Grid item xs={2}>
+          <Grid item xs={3}>
             <Button
               fullWidth
               variant="contained"
               size="large"
               disabled={formOpen || !acceptingEntries}
-              onClick={handleEnterPool}
+              onClick={handleEnterPoolDialogue}
             >
               Enter Pool
             </Button>
@@ -386,13 +417,23 @@ const Pool = () => {
           </List>
         </Grid>
       </Grid>
-      <Dialog open={tokensOpen} onClose={() => setTokensOpen(false)}>
+      <Dialog
+        open={tokensOpen}
+        onClose={() => setTokensOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle id="alert-dialog-title">User token selection</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            {viewTokens.map((token) => (
-              <Typography>{token}</Typography>
-            ))}
+            <Chart
+              chartType="PieChart"
+              data={[
+                ["Aggregator", "Weightage"],
+                viewTokens.map((token) => [token, 1]),
+              ]}
+              options={{ title: "User token selection" }}
+            />
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -403,13 +444,14 @@ const Pool = () => {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         fullWidth
-        maxWidth="xs"
+        maxWidth="sm"
       >
-        <DialogTitle>Select tokens to enter pool</DialogTitle>
+        <DialogTitle>Select 5 tokens to enter pool</DialogTitle>
         <DialogContent>
           <TextField
             label="Aggregator Address"
             variant="filled"
+            value={currentToken}
             onChange={(e) => setCurrentToken(e.target.value)}
             fullWidth
           />{" "}
@@ -424,12 +466,13 @@ const Pool = () => {
           >
             Add
           </Button>
-          <Box sx={{ marginTop: 3 }}>
-            {selectedTokens.map((token, index) => (
+          <Box sx={{ marginTop: 3, textAlign: "center" }}>
+            {selectedTokens.map(({ price, address }, index) => (
               <Chip
-                label={token}
+                key={index}
+                label={`${address} ($${price})`}
                 onDelete={() => handleTokenDelete(index)}
-                sx={{ marginRight: 1, marginTop: 1 }}
+                sx={{ marginRight: 1, marginTop: 1, padding: 1 }}
               />
             ))}
           </Box>
@@ -438,7 +481,8 @@ const Pool = () => {
           <Button
             variant="contained"
             fullWidth
-            disabled={selectedTokens.length !== 5}
+            disabled={selectedTokens.length !== 5 || txLoading}
+            onClick={handleEnterPool}
           >
             Enter Pool
           </Button>

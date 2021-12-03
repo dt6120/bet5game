@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+import { fetchPoolConfig } from "./redux/pool/configSlice";
 
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -11,6 +14,19 @@ import Pool from "./pages/Pool";
 // import CompletePools from "./pages/CompletePools";
 
 const App = () => {
+  const dispatch = useDispatch();
+  const { error, loading } = useSelector((state) => state.config);
+
+  useEffect(() => {
+    dispatch(fetchPoolConfig());
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      dispatch(fetchPoolConfig());
+    }
+  }, [loading]);
+
   return (
     <Router>
       <Navbar />

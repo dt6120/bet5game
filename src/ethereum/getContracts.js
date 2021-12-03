@@ -5,7 +5,7 @@ import { contracts } from "./artifacts.json";
 
 const getContracts = async () => {
   const { Token, Bet5Game } = contracts;
-  const provider = await getProvider();
+  const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
 
   const tokenContract = new ethers.Contract(Token.address, Token.abi, provider);
   const poolContract = new ethers.Contract(
