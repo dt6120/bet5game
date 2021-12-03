@@ -23,11 +23,10 @@ const main = async () => {
       .transfer(signers[i].address, "1000000000000000000000000");
     await tx.wait();
 
-    // const apprTx = await
-    tokenContract
+    const apprTx = await tokenContract
       .connect(signers[i])
       .approve(poolContract.address, "1000000000000000000000000");
-    // await apprTx.wait();
+    await apprTx.wait();
 
     console.log(`Transfer and approve done for user ${i + 1}`);
   }

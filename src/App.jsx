@@ -1,7 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { fetchPoolConfig } from "./redux/pool/configSlice";
@@ -27,22 +30,37 @@ const App = () => {
     }
   }, [loading]);
 
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: prefersDarkMode ? "dark" : "light",
+        },
+      }),
+    [prefersDarkMode]
+  );
+
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route exact path="/" element={<Home />} />
-        <Route exact path="/pools/:id" element={<Pool />} />
-        {/* <Route exact path="/pools/upcoming" element={<UpcomingPools />} /> */}
-        {/* <Route exact path="/pools/active" element={<ActivePools />} /> */}
-        {/* <Route exact path="/pools/complete" element={<CompletePools />} /> */}
-      </Routes>
-      <ToastContainer
-        position="top-center"
-        autoClose={3000}
-        pauseOnFocusLoss={false}
-      />
-    </Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route exact path="/" element={<Home />} />
+          <Route exact path="/pools/:id" element={<Pool />} />
+          {/* <Route exact path="/pools/upcoming" element={<UpcomingPools />} /> */}
+          {/* <Route exact path="/pools/active" element={<ActivePools />} /> */}
+          {/* <Route exact path="/pools/complete" element={<CompletePools />} /> */}
+        </Routes>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          pauseOnFocusLoss={false}
+        />
+      </Router>
+    </ThemeProvider>
   );
 };
 

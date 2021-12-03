@@ -126,7 +126,7 @@ const getAggregatorData = async (aggregatorAddress) => {
 
   const price = Number((await aggregatorContract.latestRoundData())[1]);
   const decimals = await aggregatorContract.decimals();
-  const roundPrice = price / 10 ** decimals;
+  const roundPrice = ethers.utils.formatUnits(price.toString(), decimals);
 
   return {
     price,

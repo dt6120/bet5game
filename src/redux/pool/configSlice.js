@@ -63,7 +63,7 @@ export const configSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchPoolConfig.rejected, (state, { payload }) => {
-        toast.error(payload);
+        // toast.error(payload);
 
         state.data = {};
         state.error = payload;

@@ -6,9 +6,9 @@ import { toast } from "react-toastify";
 import { ethers } from "ethers";
 
 const initialState = {
-  loading: false,
-  error: "",
-  data: "",
+  poolLoading: false,
+  poolError: "",
+  poolData: {},
   txLoading: false,
   txHash: "",
   txError: "",
@@ -26,26 +26,31 @@ export const fetchPoolData = createAsyncThunk(
         return rejectWithValue(`Pool ${id} does not exist`);
       }
       const pool = await poolContract.pools(id);
-      const poolToken = await getTokenData(pool.token);
-      const entries = await poolContract.getPoolEntries(id);
-      const entryData = [];
+      const { symbol } = await getTokenData(pool.token);
+      // const entries = await poolContract.getPoolEntries(id);
+      // const entryData = [];
 
-      for (let i = 0; i < entries.length; i++) {
-        const selection = await poolContract.getUserPoolEntries(id, entries[i]);
-        entryData.push({
-          aggregators: selection.tokens,
-          prices: selection.prices,
-        });
-      }
+      // for (let i = 0; i < entries.length; i++) {
+      //   const selection = await poolContract.getUserPoolEntries(id, entries[i]);
+      //   entryData.push({
+      //     aggregators: selection.tokens,
+      //     prices: selection.prices,
+      //   });
+      // }
 
       return {
         id,
+        status:
+          pool.status.toString() === "0"
+            ? "ACTIVE"
+            : pool.status.toString() === "1"
+            ? "CANCELLED"
+            : "COMPLETE",
         startTime: Number(pool.startTime) * 1000,
         endTime: Number(pool.endTime) * 1000,
-        // entryFee: ethers.utils.formatUnits(pool.entryFee, "ether"),
-        entryFee: Number(pool.entryFee) / 10 ** poolToken.decimals,
-        token: poolToken,
-        entryCount: entries.length,
+        entryFee: ethers.utils.formatUnits(pool.entryFee.toString(), "ether"),
+        token: { symbol, address: pool.token },
+        entryCount: 10,
       };
     } catch (error) {
       return rejectWithValue(error?.message);
@@ -61,12 +66,34 @@ export const enterPool = createAsyncThunk(
         return rejectWithValue("Select 5 tokens to enter");
       }
 
-      const { poolContract } = await getContracts();
+      const { poolContract, tokenContract } = await getContracts();
       const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
       const signer = provider.getSigner();
 
+      const allowance = await tokenContract.allowance(
+        provider.provider.selectedAddress,
+        poolContract.address
+      );
+      const entryFee = (await poolContract.pools(id)).entryFee;
+      if (allowance < entryFee) {
+        const apprTx = await tokenContract
+          .connect(signer)
+          .approve(
+            poolContract.address,
+            "10000000000000000000000000000000000000000"
+          );
+        await apprTx.wait();
+      }
       const tx = await poolContract.connect(signer).enterPool(id, tokens);
-      const { transactionHash } = await tx.wait();
+      // const { transactionHash } =
+      const { transactionHash, events } = await tx.wait();
+
+      const { poolId, user, prices } = events.filter(
+        (event) => event.event === "PoolEntered"
+      )[0].args;
+      console.log(
+        events.filter((event) => event.event === "PoolEntered")[0].args
+      );
 
       return transactionHash;
     } catch (error) {
@@ -108,21 +135,21 @@ export const poolSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchPoolData.pending, (state) => {
-        state.data = {};
-        state.error = "";
-        state.loading = true;
+        state.poolData = {};
+        state.poolError = "";
+        state.poolLoading = true;
       })
       .addCase(fetchPoolData.fulfilled, (state, { payload }) => {
-        state.data = payload;
-        state.error = "";
-        state.loading = false;
+        state.poolData = payload;
+        state.poolError = "";
+        state.poolLoading = false;
       })
       .addCase(fetchPoolData.rejected, (state, { payload }) => {
         toast.error(payload);
 
-        state.data = {};
-        state.error = payload;
-        state.loading = false;
+        state.poolData = {};
+        state.poolError = payload;
+        state.poolLoading = false;
       })
       .addCase(enterPool.pending, (state) => {
         toast.info("Approve MetaMask popup");

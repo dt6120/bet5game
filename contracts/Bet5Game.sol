@@ -17,9 +17,9 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
     uint8 public constant MAX_ENTRY_COUNT = 30;
     uint8 public constant NUM_USER_SELECTION = 5;
     uint16 public constant FEE = 500;
-    uint256 public constant POOL_ENTRY_INTERVAL = 2 minutes; // 30 minutes;
-    uint256 public constant POOL_START_INTERVAL = 3 minutes; // 1 days;
-    uint256 public constant POOL_DURATION = 5 minutes; // 1 days;
+    uint256 public POOL_ENTRY_INTERVAL = 55 minutes; // 30 minutes;
+    uint256 public POOL_START_INTERVAL = 1 hours; // 1 days;
+    uint256 public POOL_DURATION = 1 hours; // 1 days;
 
     enum Status {
         ACTIVE,
@@ -51,21 +51,25 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
     mapping(uint256 => mapping(address => UserEntry)) internal userPoolEntries;
 
     event PoolCreated(
-        uint256 poolId,
-        uint256 startTime,
+        uint256 indexed poolId,
+        uint256 indexed startTime,
         uint256 endTime,
-        address token,
+        address indexed token,
         uint256 entryFee
     );
     event PoolEntered(
-        uint256 poolId,
-        address user,
+        uint256 indexed poolId,
+        address indexed user,
         address[NUM_USER_SELECTION] tokens,
         int256[NUM_USER_SELECTION] prices
     );
-    event PoolCancelled(uint256 poolId);
-    event PoolRewardTransfer(uint256 poolId, uint256 amount, address winner);
-    event FeeWithdrawn(address token, uint256 amount);
+    event PoolCancelled(uint256 indexed poolId);
+    event PoolRewardTransfer(
+        uint256 indexed poolId,
+        uint256 indexed amount,
+        address indexed winner
+    );
+    event FeeWithdrawn(address indexed token, uint256 indexed amount);
 
     constructor() {
         keeperPoolCounter = 1;

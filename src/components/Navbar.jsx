@@ -134,7 +134,7 @@ const Navbar = () => {
             component="div"
             sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
           >
-            <MenuItem component={Link} to="/">
+            <MenuItem onClick={() => navigate("/")}>
               <img src={Logo} alt="" width="40" height="40" />{" "}
               <Typography sx={{ mx: 3 }}>BET 5 GAME</Typography>
             </MenuItem>
@@ -170,13 +170,13 @@ const Navbar = () => {
               }}
             >
               {pages.map((page) => (
-                <MenuItem
-                  key={page}
-                  onClick={handleCloseNavMenu}
-                  component={Link}
-                  to={`/pools/${page.toLowerCase()}`}
-                >
-                  <Typography textAlign="center">{page}</Typography>
+                <MenuItem key={page} onClick={handleCloseNavMenu}>
+                  <Typography
+                    textAlign="center"
+                    onClick={() => navigate(`/${page.toLowerCase()}`)}
+                  >
+                    {page}
+                  </Typography>
                 </MenuItem>
               ))}
             </Menu>
@@ -187,7 +187,7 @@ const Navbar = () => {
             component="div"
             sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}
           >
-            <MenuItem component={Link} to="/">
+            <MenuItem onClick={() => navigate("/")}>
               <img src={Logo} alt="" width="40" height="40" />{" "}
               <Typography sx={{ mx: 3 }}>BET 5 GAME</Typography>
             </MenuItem>
@@ -199,7 +199,7 @@ const Navbar = () => {
                 onClick={handleCloseNavMenu}
                 sx={{ my: 2, color: "white", display: "block" }}
               >
-                <MenuItem component={Link} to={`/pools/${page.toLowerCase()}`}>
+                <MenuItem onClick={() => navigate(`/${page.toLowerCase()}`)}>
                   {page}
                 </MenuItem>
               </Button>
@@ -210,7 +210,7 @@ const Navbar = () => {
             {!address ? (
               <Button
                 variant="contained"
-                color="secondary"
+                color="primary"
                 onClick={handleConnectWallet}
                 disabled={loading}
               >
@@ -224,7 +224,7 @@ const Navbar = () => {
                     label="Create Pool"
                     variant="contained"
                     size="large"
-                    color="secondary"
+                    color="primary"
                     onClick={() => setCreatePoolOpen(true)}
                     sx={{ marginRight: 3 }}
                   />
@@ -235,7 +235,7 @@ const Navbar = () => {
                     label={`${address.substring(0, 10)}...`}
                     variant="contained"
                     size="large"
-                    color="secondary"
+                    color="primary"
                     onClick={handleOpenUserMenu}
                   />
                 </Tooltip>
@@ -256,13 +256,13 @@ const Navbar = () => {
                   onClose={handleCloseUserMenu}
                 >
                   {settings.map((setting) => (
-                    <MenuItem
-                      key={setting}
-                      onClick={handleCloseUserMenu}
-                      component={Link}
-                      to={`/${setting.toLowerCase()}`}
-                    >
-                      <Typography textAlign="center">{setting}</Typography>
+                    <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                      <Typography
+                        textAlign="center"
+                        onClick={() => navigate(`/${setting.toLowerCase()}`)}
+                      >
+                        {setting}
+                      </Typography>
                     </MenuItem>
                   ))}
                   <MenuItem onClick={handleConnectWallet} disabled={loading}>
