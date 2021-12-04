@@ -18,7 +18,7 @@ const main = async () => {
     const poolId = await poolContract.poolCounter();
     console.log(`Entering pool ${poolId}`);
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 6; i++) {
       const tx = await poolContract
         .connect(signers[i])
         .enterPool(

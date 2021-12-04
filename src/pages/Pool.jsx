@@ -11,6 +11,9 @@ import getTokenData from "../ethereum/getTokenData";
 import client from "../graphql/client";
 import { FETCH_ID_POOL } from "../graphql/queries/fetchPools";
 
+import PoolTable from "../components/PoolTable";
+import PoolInfo from "../components/PoolInfo";
+
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Container from "@mui/material/Container";
@@ -44,13 +47,7 @@ const Pool = () => {
   const dispatch = useDispatch();
   const { wallet, pool: poolState, config } = useSelector((state) => state);
   const { address: userAddress } = wallet;
-  const {
-    poolLoading,
-    poolError,
-    poolData: pool,
-    txLoading,
-    txHash,
-  } = poolState;
+  const { poolLoading, poolError, poolData, txLoading, txHash } = poolState;
   const {
     minEntryCount,
     maxEntryCount,
@@ -61,12 +58,16 @@ const Pool = () => {
   } = config.data;
 
   const [formOpen, setFormOpen] = useState(false);
-  const [acceptingEntries, setAcceptingEntries] = useState(true);
+  // const [acceptingEntries, setAcceptingEntries] = useState(true);
 
+  // CREATE, ENTRY, START, COMPLETE, CANCLLED
   const [phase, setPhase] = useState(0);
 
   const [currentToken, setCurrentToken] = useState("");
   const [selectedTokens, setSelectedTokens] = useState([]);
+
+  // const [poolLoading, setPoolLoading] = useState(false);
+  const [pool, setPool] = useState({});
 
   const handleEnterPoolDialogue = () => {
     if (!userAddress) {
@@ -101,23 +102,67 @@ const Pool = () => {
     );
   };
 
-  const handleIncrementPhase = () => {
-    setPhase((phase) => phase + 1);
+  const handlePhase = () => {
+    const { startTime, endTime, entryCount } = pool;
+
+    if (Date.now() >= startTime && entryCount < minEntryCount) {
+      setPhase((phase) => phase + 1);
+      setPool({ ...pool, status: "CANCELLED" });
+      toast.error("Pool cancelled, not enough entries");
+    } else if (Date.now() >= endTime) {
+      setPhase((phase) => phase + 1);
+      setPool({ ...pool, status: "COMPLETE" });
+      toast.success("Pool over, distributing rewards");
+    } else {
+      dispatch(fetchPoolData(poolId));
+    }
   };
+
+  // const fetchPoolData = async () => {
+  //   try {
+  //     const {
+  //       data: { pools },
+  //     } = await client.query({
+  //       query: FETCH_ID_POOL,
+  //       variables: { poolId: poolId.toString() },
+  //     });
+
+  //     const {
+  //       id,
+  //       status,
+  //       startTime,
+  //       endTime,
+  //       entryCount,
+  //       entryFee,
+  //       token: address,
+  //     } = pools[0];
+  //     const { symbol, decimals } = await getTokenData(address);
+
+  //     setPool({
+  //       id,
+  //       status,
+  //       startTime: Number(startTime),
+  //       endTime: Number(endTime),
+  //       entryCount,
+  //       entryFee: ethers.utils.formatUnits(entryFee.toString(), decimals),
+  //       token: { symbol, address },
+  //     });
+  //   } catch (error) {
+  //     toast.error(`Pool ${poolId} not found`);
+  //     return navigate("/");
+  //   }
+  // };
 
   useEffect(() => {
     dispatch(fetchPoolData(poolId));
-  }, [phase]);
+    // fetchPoolData();
+  }, [poolId]);
+
+  useEffect(() => {}, [phase]);
 
   useEffect(() => {
-    if (!poolLoading && pool?.id > 0) {
-      if (Date.now() < pool.startTime - poolEntryInterval) {
-        setAcceptingEntries(false);
-      } else if (Date.now() < pool.startTime) {
-        setAcceptingEntries(true);
-      } else {
-        setAcceptingEntries(false);
-      }
+    if (!poolLoading) {
+      setPool(poolData);
     }
   }, [poolLoading]);
 
@@ -189,7 +234,7 @@ const Pool = () => {
                           ? pool.endTime
                           : pool.startTime
                       }
-                      onComplete={handleIncrementPhase}
+                      onComplete={handlePhase}
                     />
                   </Typography>
                 </Paper>
@@ -207,7 +252,7 @@ const Pool = () => {
                     <strong>
                       <Countdown
                         date={pool.startTime - poolEntryInterval}
-                        onComplete={handleIncrementPhase}
+                        onComplete={handlePhase}
                       />
                     </strong>
                   </Alert>
@@ -224,7 +269,11 @@ const Pool = () => {
                   fullWidth
                   variant="contained"
                   size="large"
-                  disabled={formOpen || !acceptingEntries}
+                  disabled={
+                    formOpen ||
+                    Date.now() < pool.startTime - poolEntryInterval ||
+                    pool.entryCount === maxEntryCount
+                  }
                   onClick={handleEnterPoolDialogue}
                 >
                   Enter Pool
@@ -233,71 +282,24 @@ const Pool = () => {
             </Grid>
           )}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={8}></Grid>
+            <Grid item xs={12} md={8}>
+              <PoolTable
+                poolId={poolId}
+                status={pool.status}
+                token={pool.token.symbol}
+                entries={pool.entries}
+              />
+            </Grid>
             <Grid item xs={12} md={4}>
-              <Typography
-                component="h4"
-                variant="h4"
-                sx={{ marginTop: 5, marginBottom: 2 }}
-              >
-                Pool Information &nbsp;
-                <Box sx={{ position: "relative", display: "inline-flex" }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={`${(pool.entryCount * 100) / maxEntryCount}`}
-                  />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: "absolute",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      component="div"
-                      color="text.secondary"
-                    >
-                      {`${Math.round(
-                        (pool.entryCount * 100) / maxEntryCount
-                      )}%`}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Typography>
-              <List component={Paper}>
-                <ListItem>Total Entries: {pool.entryCount}</ListItem>
-                <ListItem>
-                  Entries Left: {maxEntryCount - pool.entryCount}
-                </ListItem>
-                <ListItem>
-                  Entry Fee: {pool.entryFee} {pool?.token?.symbol}
-                </ListItem>
-                <ListItem>
-                  Pool rewards: {pool.entryCount * pool.entryFee}{" "}
-                  {pool.token.symbol}
-                </ListItem>
-                <ListItem>
-                  1st Prize:{" "}
-                  {Math.round((pool.entryCount * pool.entryFee * 3) / 6)}{" "}
-                  {pool.token.symbol}
-                </ListItem>
-                <ListItem>
-                  2st Prize:{" "}
-                  {Math.round((pool.entryCount * pool.entryFee * 2) / 6)}{" "}
-                  {pool.token.symbol}
-                </ListItem>
-                <ListItem>
-                  3st Prize:{" "}
-                  {Math.round((pool.entryCount * pool.entryFee * 1) / 6)}{" "}
-                  {pool.token.symbol}
-                </ListItem>
-              </List>
+              <PoolInfo
+                status={pool.status}
+                startTime={pool.startTime}
+                endTime={pool.endTime}
+                entryFee={pool.entryFee}
+                entryCount={pool.entryCount}
+                maxEntryCount={maxEntryCount}
+                token={pool.token}
+              />
             </Grid>
           </Grid>
           <Dialog

@@ -12,6 +12,7 @@ import { fetchPoolConfig } from "./redux/pool/configSlice";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Pool from "./pages/Pool";
+import Profile from "./pages/Profile";
 // import UpcomingPools from "./pages/UpcomingPools";
 // import ActivePools from "./pages/ActivePools";
 // import CompletePools from "./pages/CompletePools";
@@ -50,6 +51,7 @@ const App = () => {
         <Routes>
           <Route exact path="/" element={<Home />} />
           <Route exact path="/pools/:id" element={<Pool />} />
+          <Route exact path="/profile" element={<Profile />} />
           {/* <Route exact path="/pools/upcoming" element={<UpcomingPools />} /> */}
           {/* <Route exact path="/pools/active" element={<ActivePools />} /> */}
           {/* <Route exact path="/pools/complete" element={<CompletePools />} /> */}

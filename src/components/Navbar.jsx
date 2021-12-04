@@ -30,7 +30,7 @@ import Logo from "../assets/logo.png";
 import UserAvatar from "../assets/avatar.png";
 import getTokenData from "../ethereum/getTokenData";
 
-const pages = ["Upcoming", "Active", "Complete"];
+const pages = ["Explore", "Profile"];
 const settings = ["Profile"];
 
 const Navbar = () => {

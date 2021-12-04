@@ -15,6 +15,9 @@ const initialState = {
   createLoading: false,
   createId: 0,
   createError: "",
+  tableData: {},
+  tableLoading: false,
+  tableError: "",
 };
 
 export const fetchPoolData = createAsyncThunk(
@@ -27,16 +30,8 @@ export const fetchPoolData = createAsyncThunk(
       }
       const pool = await poolContract.pools(id);
       const { symbol } = await getTokenData(pool.token);
-      // const entries = await poolContract.getPoolEntries(id);
-      // const entryData = [];
 
-      // for (let i = 0; i < entries.length; i++) {
-      //   const selection = await poolContract.getUserPoolEntries(id, entries[i]);
-      //   entryData.push({
-      //     aggregators: selection.tokens,
-      //     prices: selection.prices,
-      //   });
-      // }
+      let entries = await poolContract.getPoolEntries(id);
 
       return {
         id,
@@ -50,7 +45,8 @@ export const fetchPoolData = createAsyncThunk(
         endTime: Number(pool.endTime) * 1000,
         entryFee: ethers.utils.formatUnits(pool.entryFee.toString(), "ether"),
         token: { symbol, address: pool.token },
-        entryCount: 10,
+        entryCount: entries.length,
+        entries,
       };
     } catch (error) {
       return rejectWithValue(error?.message);
@@ -128,6 +124,69 @@ export const createPool = createAsyncThunk(
   }
 );
 
+export const fetchPoolTable = createAsyncThunk(
+  "pool/table",
+  async ({ poolId, entries }, { rejectWithValue }) => {
+    try {
+      const { poolContract } = await getContracts();
+      const fee = await poolContract.FEE();
+      const pool = await poolContract.pools(poolId);
+
+      let table = [];
+      let type = "";
+
+      if (pool.status.toString() === "2") {
+        type = "Winners";
+        const poolWinners = await poolContract.getPoolWinners(poolId);
+        table = await Promise.all(
+          poolWinners.map(async (address, index) => {
+            const { decimals } = await getTokenData(pool.token);
+
+            const entryFee = ethers.utils.formatUnits(
+              pool.entryFee.toString(),
+              decimals
+            );
+            const prize = Math.round(
+              ((3 - index) * entryFee * entries.length * (1 - fee / 10000)) / 6
+            );
+            return { address, prize };
+          })
+        );
+      } else if (pool.status.toString() === "1") {
+        type = "Entries";
+        table = entries.map((address) => ({ address }));
+      } else {
+        type = "Leaderboard";
+        table = await Promise.all(
+          entries.map(async (address) => {
+            const points = await poolContract.getNetPoints(poolId, address);
+            return { address, points };
+          })
+        );
+        table.sort((x, y) => y.points - x.points);
+      }
+
+      table = await Promise.all(
+        table.map(async (item) => {
+          const tokens = (
+            await poolContract.getUserPoolEntries(poolId, item.address)
+          )[0];
+          return {
+            ...item,
+            tokens,
+          };
+        })
+      );
+
+      return { type, table };
+    } catch (error) {
+      rejectWithValue(
+        error?.data?.message ? error.data.message.split(":")[1] : error?.message
+      );
+    }
+  }
+);
+
 export const poolSlice = createSlice({
   name: "pool/data",
   initialState,
@@ -192,6 +251,21 @@ export const poolSlice = createSlice({
         state.createId = "";
         state.createError = payload;
         state.createLoading = false;
+      })
+      .addCase(fetchPoolTable.pending, (state) => {
+        state.tableError = "";
+        state.tableLoading = true;
+      })
+      .addCase(fetchPoolTable.fulfilled, (state, { payload }) => {
+        state.tableData = payload;
+        state.tableError = "";
+        state.tableLoading = false;
+      })
+      .addCase(fetchPoolTable.rejected, (state, { payload }) => {
+        toast.error(payload);
+
+        state.tableError = payload;
+        state.tableLoading = false;
       });
   },
 });

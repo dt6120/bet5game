@@ -17,9 +17,30 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
     uint8 public constant MAX_ENTRY_COUNT = 30;
     uint8 public constant NUM_USER_SELECTION = 5;
     uint16 public constant FEE = 500;
-    uint256 public POOL_ENTRY_INTERVAL = 55 minutes; // 30 minutes;
-    uint256 public POOL_START_INTERVAL = 1 hours; // 1 days;
-    uint256 public POOL_DURATION = 1 hours; // 1 days;
+    uint256 public POOL_ENTRY_INTERVAL = 5 minutes; // 30 minutes;
+    uint256 public POOL_START_INTERVAL = 10 minutes; // 1 days;
+    uint256 public POOL_DURATION = 10 minutes; // 1 days;
+
+    // --------------------- TEST FUNCTIONS --------------------
+    // ---------------- DO NOT USE IN PRODUCTION ---------------
+
+    function setPoolEntryInterval(uint256 _poolEntryInterval)
+        external
+        onlyOwner
+    {
+        POOL_ENTRY_INTERVAL = _poolEntryInterval;
+    }
+
+    function setPoolStartInterval(uint256 _poolStartInterval)
+        external
+        onlyOwner
+    {
+        POOL_START_INTERVAL = _poolStartInterval;
+    }
+
+    function setPoolDuration(uint256 _poolDuration) external onlyOwner {
+        POOL_DURATION = _poolDuration;
+    }
 
     enum Status {
         ACTIVE,
@@ -61,7 +82,8 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
         uint256 indexed poolId,
         address indexed user,
         address[NUM_USER_SELECTION] tokens,
-        int256[NUM_USER_SELECTION] prices
+        int256[NUM_USER_SELECTION] prices,
+        bool newEntry
     );
     event PoolCancelled(uint256 indexed poolId);
     event PoolRewardTransfer(
@@ -156,7 +178,8 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
             _poolId,
             msg.sender,
             _tokens,
-            userPoolEntries[_poolId][msg.sender].prices
+            userPoolEntries[_poolId][msg.sender].prices,
+            newEntry
         );
     }
 
@@ -212,7 +235,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
             uint256 amount = (rewards * (WINNER_COUNT - i)) / 6;
             ERC20(pool.token).transfer(winner, amount);
 
-            emit PoolRewardTransfer(keeperPoolCounter, amount, winner);
+            emit PoolRewardTransfer(_poolId, amount, winner);
         }
     }
 
