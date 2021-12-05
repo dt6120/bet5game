@@ -19,10 +19,7 @@ import CompleteIcon from "@mui/icons-material/CheckCircle";
 import RewardIcon from "@mui/icons-material/Stars";
 
 import client from "../graphql/client";
-import {
-  FECTH_USER_POOLS,
-  FETCH_USER_REWARDS,
-} from "../graphql/queries/profile";
+import { FETCH_ALL_POOLS } from "../graphql/queries/fetchPools";
 
 const drawerWidth = 240;
 
@@ -40,11 +37,15 @@ const Profile = () => {
   useEffect(() => {
     if (address) {
       client
-        .query({ query: FECTH_USER_POOLS, variables: { address } })
-        .then(console.log);
-
-      client
-        .query({ query: FETCH_USER_REWARDS, variables: { address } })
+        .query({
+          query: FETCH_ALL_POOLS,
+          variables: {
+            orderBy: "startTime",
+            orderDirection: "desc",
+            first: 10,
+            skip: 0,
+          },
+        })
         .then(console.log);
     }
   }, [address]);
@@ -90,7 +91,7 @@ const Profile = () => {
             >
               <CancelIcon /> &nbsp; Cancelled Pools
             </ListItem>
-            <Divider />
+            {/* <Divider />
             <ListItem
               button
               onClick={() => handleTab(4)}
@@ -98,7 +99,7 @@ const Profile = () => {
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
               <RewardIcon /> &nbsp; My Rewards
-            </ListItem>
+            </ListItem> */}
           </List>
         </Grid>
         <Grid item xs={12} sm={7} md={9}>

@@ -159,7 +159,9 @@ export const fetchPoolTable = createAsyncThunk(
         type = "Leaderboard";
         table = await Promise.all(
           entries.map(async (address) => {
-            const points = await poolContract.getNetPoints(poolId, address);
+            const points = Number(
+              await poolContract.getNetPoints(poolId, address)
+            );
             return { address, points };
           })
         );

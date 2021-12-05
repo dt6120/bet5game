@@ -1,12 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const FETCH_ALL_POOLS = gql`
-  query (
-    $orderBy: BigInt
-    $orderDirection: String
-    $first: BigInt
-    $skip: BigInt
-  ) {
+  query ($orderBy: String, $orderDirection: String, $first: Int, $skip: Int) {
     pools(
       orderBy: $orderBy
       orderDirection: $orderDirection

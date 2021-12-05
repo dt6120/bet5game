@@ -19,6 +19,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
+import Alert from "@mui/material/Alert";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RankingIcon from "@mui/icons-material/MilitaryTech";
@@ -29,7 +30,7 @@ import TokenIcon from "@mui/icons-material/BubbleChart";
 import UpIcon from "@mui/icons-material/ArrowDropUp";
 import DownIcon from "@mui/icons-material/ArrowDropDown";
 
-const PoolTable = ({ poolId, status, token, entries }) => {
+const PoolTable = ({ poolId, status, startTime, token, entries }) => {
   const dispatch = useDispatch();
   const { address: userAddress } = useSelector((state) => state.wallet);
   const { tableLoading, tableError, tableData } = useSelector(
@@ -72,72 +73,78 @@ const PoolTable = ({ poolId, status, token, entries }) => {
           >
             {type}
           </Typography>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell align="center">
-                    Ranking <RankingIcon />
-                  </TableCell>
-                  <TableCell align="left">
-                    User <AddressIcon />
-                  </TableCell>
-                  <TableCell align="center">
-                    Tokens <TokenIcon />
-                  </TableCell>
-                  {status !== "CANCELLED" && (
+          {table?.length === 0 ? (
+            <Alert severity="info" sx={{ marginTop: 3 }}>
+              <strong>No user entries for this pool</strong>
+            </Alert>
+          ) : (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
                     <TableCell align="center">
-                      {type === "Winners" ? (
-                        <>
-                          Prize <TrophyIcon />
-                        </>
-                      ) : (
-                        <>
-                          Net Points <PointsIcon />
-                        </>
-                      )}{" "}
+                      Ranking <RankingIcon />
                     </TableCell>
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {table &&
-                  table.map(({ address, tokens, prize, points }, index) => (
-                    <TableRow
-                      key={index}
-                      selected={
-                        address.toLowerCase() === userAddress.toLowerCase()
-                      }
-                    >
-                      <TableCell align="center">{index + 1}</TableCell>
-                      <TableCell align="left">{address}</TableCell>
+                    <TableCell align="left">
+                      User <AddressIcon />
+                    </TableCell>
+                    <TableCell align="center">
+                      Tokens <TokenIcon />
+                    </TableCell>
+                    {status !== "CANCELLED" && (
                       <TableCell align="center">
-                        <IconButton
-                          onClick={() => {
-                            setViewTokens(tokens);
-                            setTokenDialog(true);
-                          }}
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
+                        {type === "Winners" ? (
+                          <>
+                            Prize <TrophyIcon />
+                          </>
+                        ) : (
+                          <>
+                            Net Points <PointsIcon />
+                          </>
+                        )}{" "}
                       </TableCell>
-                      {status !== "CANCELLED" && (
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {table &&
+                    table.map(({ address, tokens, prize, points }, index) => (
+                      <TableRow
+                        key={index}
+                        selected={
+                          address.toLowerCase() === userAddress.toLowerCase()
+                        }
+                      >
+                        <TableCell align="center">{index + 1}</TableCell>
+                        <TableCell align="left">{address}</TableCell>
                         <TableCell align="center">
-                          {type === "Winners" ? (
-                            `${prize} ${token}`
-                          ) : (
-                            <>
-                              {points / 100}%{" "}
-                              {points >= 0 ? <UpIcon /> : <DownIcon />}
-                            </>
-                          )}
+                          <IconButton
+                            onClick={() => {
+                              setViewTokens(tokens);
+                              setTokenDialog(true);
+                            }}
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                        {status !== "CANCELLED" && (
+                          <TableCell align="center">
+                            {type === "Winners" ? (
+                              `${prize} ${token}`
+                            ) : (
+                              <>
+                                {Date.now() >= startTime ? points / 100 : 0}%{" "}
+                                {points >= 0 ? <UpIcon /> : <DownIcon />}
+                              </>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </>
       )}
       <Dialog

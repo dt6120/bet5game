@@ -24,6 +24,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import PlusIcon from "../assets/plus.png";
 import Logo from "../assets/logo.png";
@@ -292,7 +293,7 @@ const Navbar = () => {
                 label="Entry Token"
                 variant="filled"
                 value={entryTokenData?.address}
-                error={entryTokenData?.error}
+                error={entryTokenData?.error !== ""}
                 helperText={
                   entryTokenData?.name
                     ? `Token found: ${entryTokenData?.name} (${entryTokenData?.symbol})`
@@ -317,7 +318,11 @@ const Navbar = () => {
                 !entryTokenData?.name
               }
             >
-              Create
+              {createLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Create"
+              )}
             </Button>
             <Button
               fullWidth

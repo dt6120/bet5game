@@ -10,6 +10,7 @@ import getAggregatorData from "../ethereum/getAggregatorData";
 import getTokenData from "../ethereum/getTokenData";
 import client from "../graphql/client";
 import { FETCH_ID_POOL } from "../graphql/queries/fetchPools";
+import getContracts from "../ethereum/getContracts";
 
 import PoolTable from "../components/PoolTable";
 import PoolInfo from "../components/PoolInfo";
@@ -30,15 +31,10 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import CircularProgress from "@mui/material/CircularProgress";
+import LinearProgress from "@mui/material/LinearProgress";
 import TextField from "@mui/material/TextField";
 import Chip from "@mui/material/Chip";
 import Backdrop from "@mui/material/Backdrop";
-
-// users tokens visible only after pool starts
-// hide entries left after pool starts
-// before start time, "entries"
-// after start time, "leaderboard"
-// after end time, "winners"
 
 const Pool = () => {
   const { id: poolId } = useParams();
@@ -47,7 +43,13 @@ const Pool = () => {
   const dispatch = useDispatch();
   const { wallet, pool: poolState, config } = useSelector((state) => state);
   const { address: userAddress } = wallet;
-  const { poolLoading, poolError, poolData, txLoading, txHash } = poolState;
+  const {
+    poolLoading,
+    poolError,
+    poolData: pool,
+    txLoading,
+    txHash,
+  } = poolState;
   const {
     minEntryCount,
     maxEntryCount,
@@ -61,13 +63,16 @@ const Pool = () => {
   // const [acceptingEntries, setAcceptingEntries] = useState(true);
 
   // CREATE, ENTRY, START, COMPLETE, CANCLLED
-  const [phase, setPhase] = useState(0);
+  // const [phase, setPhase] = useState(0);
 
   const [currentToken, setCurrentToken] = useState("");
   const [selectedTokens, setSelectedTokens] = useState([]);
 
+  const [backdropOpen, setBackdropOpen] = useState(false);
+  const [backdropText, setBackdropText] = useState("");
+
   // const [poolLoading, setPoolLoading] = useState(false);
-  const [pool, setPool] = useState({});
+  // const [pool, setPool] = useState({});
 
   const handleEnterPoolDialogue = () => {
     if (!userAddress) {
@@ -102,19 +107,42 @@ const Pool = () => {
     );
   };
 
-  const handlePhase = () => {
-    const { startTime, endTime, entryCount } = pool;
+  const handleCancel = async () => {
+    const { poolContract } = await getContracts();
+    const entryCount = (await poolContract.getPoolEntries(poolId)).length;
 
-    if (Date.now() >= startTime && entryCount < minEntryCount) {
-      setPhase((phase) => phase + 1);
-      setPool({ ...pool, status: "CANCELLED" });
-      toast.error("Pool cancelled, not enough entries");
-    } else if (Date.now() >= endTime) {
-      setPhase((phase) => phase + 1);
-      setPool({ ...pool, status: "COMPLETE" });
-      toast.success("Pool over, distributing rewards");
-    } else {
+    if (entryCount >= minEntryCount) {
       dispatch(fetchPoolData(poolId));
+      return;
+    }
+
+    setBackdropOpen(true);
+    setBackdropText("Cancelling pool");
+
+    poolContract.once("PoolCancelled", () => {
+      dispatch(fetchPoolData(poolId));
+      setBackdropOpen(false);
+      setBackdropText("");
+    });
+  };
+
+  const handleComplete = async () => {
+    setBackdropOpen(true);
+    setBackdropText("Distributing pool rewards");
+
+    const { poolContract } = await getContracts();
+    poolContract.once("PoolRewardTransfer", () => {
+      dispatch(fetchPoolData(poolId));
+      setBackdropOpen(false);
+      setBackdropText("");
+    });
+  };
+
+  const handlePhase = () => {
+    if (Date.now() < pool.startTime + 10000) {
+      handleCancel();
+    } else {
+      handleComplete();
     }
   };
 
@@ -158,13 +186,11 @@ const Pool = () => {
     // fetchPoolData();
   }, [poolId]);
 
-  useEffect(() => {}, [phase]);
-
-  useEffect(() => {
-    if (!poolLoading) {
-      setPool(poolData);
-    }
-  }, [poolLoading]);
+  // useEffect(() => {
+  //   if (!poolLoading) {
+  //     setPool(poolData);
+  //   }
+  // }, [poolLoading]);
 
   useEffect(() => {
     if (poolError) {
@@ -189,6 +215,16 @@ const Pool = () => {
           sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
           open={poolLoading}
         >
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      ) : backdropOpen ? (
+        <Backdrop
+          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={backdropOpen}
+        >
+          <Typography component="h4" variant="h4" sx={{ marginRight: 3 }}>
+            {backdropText}
+          </Typography>
           <CircularProgress color="inherit" />
         </Backdrop>
       ) : (
@@ -252,7 +288,7 @@ const Pool = () => {
                     <strong>
                       <Countdown
                         date={pool.startTime - poolEntryInterval}
-                        onComplete={handlePhase}
+                        onComplete={() => dispatch(fetchPoolData(poolId))}
                       />
                     </strong>
                   </Alert>
@@ -288,6 +324,7 @@ const Pool = () => {
                 status={pool.status}
                 token={pool.token.symbol}
                 entries={pool.entries}
+                startTime={pool.startTime}
               />
             </Grid>
             <Grid item xs={12} md={4}>
@@ -346,7 +383,11 @@ const Pool = () => {
                 disabled={selectedTokens.length !== 5 || txLoading}
                 onClick={handleEnterPool}
               >
-                Enter Pool
+                {txLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Enter Pool"
+                )}
               </Button>
             </DialogActions>
           </Dialog>
