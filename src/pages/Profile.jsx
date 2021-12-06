@@ -61,20 +61,23 @@ const Profile = () => {
     try {
       setLoading(true);
 
-      const { data: users } = await client.query({
+      const {
+        data: { users },
+      } = await client.query({
         query: FECTH_USER_POOLS,
         variables: { address },
       });
-      const { pools: userPools } = users[0];
-      setPools(userPools);
-      console.log(userPools);
+      setPools(users[0].pools);
+      console.log(users[0].pools);
 
-      const { data: rewards } = await client.query({
+      const {
+        data: { rewards },
+      } = await client.query({
         query: FETCH_USER_REWARDS,
         variables: { address },
       });
-      setRewards(rewards[0]);
-      console.log(rewards[0]);
+      setRewards(rewards);
+      console.log(rewards);
 
       setLoading(false);
     } catch (error) {

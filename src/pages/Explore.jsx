@@ -45,7 +45,10 @@ import { ethers } from "ethers";
 
 const Explore = () => {
   const navigate = useNavigate();
-  const { maxEntryCount } = useSelector((state) => state.pool.config.data);
+  const {
+    data: { maxEntryCount },
+  } = useSelector((state) => state.config);
+  // const maxEntryCount = data?.maxEntryCount;
 
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
