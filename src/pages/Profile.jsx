@@ -29,23 +29,63 @@ const drawerWidth = 240;
 const Profile = () => {
   const navigate = useNavigate();
 
-  const { address, loading } = useSelector((state) => state.wallet);
+  const { address } = useSelector((state) => state.wallet);
 
   const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [pools, setPools] = useState([]);
+  const [filteredPools, setFilteredPools] = useState([]);
+  const [rewards, setRewards] = useState([]);
+  const [filteredRewards, setFilteredRewards] = useState([]);
 
   const handleTab = (tab) => {
     setActiveTab(tab);
+    setFilteredPools(
+      pools.filter(({ status }) => {
+        if (tab === 0) {
+          return status !== "";
+        } else if (tab === 1) {
+          return status === "ACTIVE";
+        } else if (tab === 2) {
+          return status === "COMPLETE";
+        } else if (tab === 3) {
+          return status === "CANCELLED";
+        } else {
+          return status !== "";
+        }
+      })
+    );
+  };
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+
+      const { data: users } = await client.query({
+        query: FECTH_USER_POOLS,
+        variables: { address },
+      });
+      const { pools: userPools } = users[0];
+      setPools(userPools);
+      console.log(userPools);
+
+      const { data: rewards } = await client.query({
+        query: FETCH_USER_REWARDS,
+        variables: { address },
+      });
+      setRewards(rewards[0]);
+      console.log(rewards[0]);
+
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      toast.error(error.message);
+    }
   };
 
   useEffect(() => {
     if (address) {
-      client
-        .query({ query: FECTH_USER_POOLS, variables: { address } })
-        .then(console.log);
-
-      client
-        .query({ query: FETCH_USER_REWARDS, variables: { address } })
-        .then(console.log);
+      fetchUserData();
     }
   }, [address]);
 
@@ -63,7 +103,7 @@ const Profile = () => {
               selected={activeTab === 0}
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
-              <AllIcon /> &nbsp; All Pools
+              <AllIcon /> &nbsp; Dashboard
             </ListItem>
             <Divider />
             <ListItem
@@ -72,29 +112,13 @@ const Profile = () => {
               selected={activeTab === 1}
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
-              <ActiveIcon /> &nbsp; Active Pools
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => handleTab(2)}
-              selected={activeTab === 2}
-              sx={{ paddingTop: 2, paddingBottom: 2 }}
-            >
-              <CompleteIcon /> &nbsp; Complete Pools
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => handleTab(3)}
-              selected={activeTab === 3}
-              sx={{ paddingTop: 2, paddingBottom: 2 }}
-            >
-              <CancelIcon /> &nbsp; Cancelled Pools
+              <ActiveIcon /> &nbsp; My Pools
             </ListItem>
             <Divider />
             <ListItem
               button
-              onClick={() => handleTab(4)}
-              selected={activeTab === 4}
+              onClick={() => handleTab(2)}
+              selected={activeTab === 2}
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
               <RewardIcon /> &nbsp; My Rewards

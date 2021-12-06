@@ -215,7 +215,11 @@ const Navbar = () => {
                 onClick={handleConnectWallet}
                 disabled={loading}
               >
-                Connect Wallet
+                {loading ? (
+                  <CircularProgress color="inherit" size={24} />
+                ) : (
+                  "Connect Wallet"
+                )}
               </Button>
             ) : (
               <>
