@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import Countdown from "react-countdown";
 
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
@@ -18,29 +16,11 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
-import CardMedia from "@mui/material/CardMedia";
-import CardContent from "@mui/material/CardContent";
-import CardActions from "@mui/material/CardActions";
-import Collapse from "@mui/material/Collapse";
-import Avatar from "@mui/material/Avatar";
-import IconButton from "@mui/material/IconButton";
-import { red, blue, green } from "@mui/material/colors";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ShareIcon from "@mui/icons-material/Share";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import Button from "@mui/material/Button";
 
 import AllIcon from "@mui/icons-material/BlurOn";
 import ActiveIcon from "@mui/icons-material/AccessTimeFilled";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CompleteIcon from "@mui/icons-material/CheckCircle";
-import RewardIcon from "@mui/icons-material/Stars";
-import DepositIcon from "@mui/icons-material/AccountBalance";
-import FeeIcon from "@mui/icons-material/Receipt";
-import CountIcon from "@mui/icons-material/SupervisorAccount";
-import LeftIcon from "@mui/icons-material/GroupAdd";
 import Skeleton from "@mui/material/Skeleton";
 
 import client from "../graphql/client";
@@ -48,13 +28,9 @@ import { FETCH_ALL_POOLS } from "../graphql/queries/fetchPools";
 import getTokenData from "../ethereum/getTokenData";
 import { ethers } from "ethers";
 
-const Explore = () => {
-  const navigate = useNavigate();
-  const {
-    data: { maxEntryCount },
-  } = useSelector((state) => state.config);
-  // const maxEntryCount = data?.maxEntryCount;
+import PoolCard from "../components/PoolCard";
 
+const Explore = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [pools, setPools] = useState([]);
@@ -62,9 +38,9 @@ const Explore = () => {
   const [activeSort, setActiveSort] = useState("id-asc");
   const [activePage, setActivePage] = useState(1);
 
-  const [orderBy, setOrderBy] = useState("startTime");
-  const [orderDirection, setOrderDirection] = useState("asc");
-  const [first, setFirst] = useState(4);
+  // const [orderBy, setOrderBy] = useState("startTime");
+  // const [orderDirection, setOrderDirection] = useState("asc");
+  const [first, setFirst] = useState(6);
   const [skip, setSkip] = useState(0);
 
   const handleTab = (tab) => {
@@ -157,8 +133,6 @@ const Explore = () => {
 
   useEffect(() => {
     const [orderBy, orderDirection] = activeSort.split("-");
-    setOrderBy(orderBy);
-    setOrderDirection(orderDirection);
 
     setFilteredPools(
       [...filteredPools].sort((x, y) =>
@@ -171,7 +145,7 @@ const Explore = () => {
 
   return (
     <Container>
-      <Grid container spacing={5} sx={{ marginTop: 5 }}>
+      <Grid container spacing={5} sx={{ marginTop: 5, marginBottom: 5 }}>
         <Grid item xs={12} sm={5} md={3}>
           {/* <Typography component="h4" variant="h4" sx={{ marginBottom: 2 }}>
             Filters
@@ -259,7 +233,7 @@ const Explore = () => {
                     <Skeleton
                       variant="rectangular"
                       animation="wave"
-                      height={300}
+                      height={240}
                     />
                   </Grid>
                 ))
@@ -276,60 +250,15 @@ const Explore = () => {
                       token,
                     }) => (
                       <Grid item xs={12} md={6} key={id}>
-                        <Card>
-                          <CardHeader
-                            avatar={
-                              <Avatar
-                                sx={{
-                                  bgcolor: `${
-                                    status === "ACTIVE"
-                                      ? green[500]
-                                      : status === "CANCELLED"
-                                      ? red[500]
-                                      : blue[500]
-                                  }`,
-                                }}
-                                aria-label="id"
-                                variant="circular"
-                              >
-                                {id}
-                              </Avatar>
-                            }
-                            // action={
-                            //   <IconButton aria-label="settings">
-                            //     <MoreVertIcon />
-                            //   </IconButton>
-                            // }
-                            title={`Status: ${status}`}
-                            subheader="Subheader here"
-                          />
-                          <CardContent>
-                            <List>
-                              <ListItem>
-                                <FeeIcon /> &nbsp; Entry Fee: {entryFee}{" "}
-                                {token?.symbol}
-                              </ListItem>
-                              <ListItem>
-                                <CountIcon /> &nbsp; Entry Count: {entryCount}
-                              </ListItem>
-                              {status === "ACTIVE" && Date.now() < startTime && (
-                                <ListItem>
-                                  <LeftIcon /> &nbsp; Entry Left:{" "}
-                                  {maxEntryCount - entryCount}
-                                </ListItem>
-                              )}
-                              <ListItem>
-                                <DepositIcon /> &nbsp; Pool Deposit:{" "}
-                                {entryCount * entryFee} {token.symbol}
-                              </ListItem>
-                            </List>
-                          </CardContent>
-                          <CardActions disableSpacing>
-                            <Button onClick={() => navigate(`/pools/${id}`)}>
-                              View
-                            </Button>
-                          </CardActions>
-                        </Card>
+                        <PoolCard
+                          id={id}
+                          status={status}
+                          startTime={startTime}
+                          endTime={endTime}
+                          entryCount={entryCount}
+                          entryFee={entryFee}
+                          token={token}
+                        />
                       </Grid>
                     )
                   )}

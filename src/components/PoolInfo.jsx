@@ -1,4 +1,6 @@
 import React from "react";
+import ReactTimeAgo from "react-time-ago";
+
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
@@ -13,6 +15,7 @@ import DepositIcon from "@mui/icons-material/AccountBalance";
 import FeeIcon from "@mui/icons-material/Receipt";
 import CountIcon from "@mui/icons-material/SupervisorAccount";
 import LeftIcon from "@mui/icons-material/GroupAdd";
+import TimerIcon from "@mui/icons-material/Timer";
 
 const PoolInfo = ({
   status,
@@ -76,6 +79,19 @@ const PoolInfo = ({
           <DepositIcon /> &nbsp; Pool Deposit: {entryCount * entryFee}{" "}
           {token.symbol}
         </ListItem>
+        {status !== "ACTIVE" ? (
+          <ListItem>
+            <TimerIcon /> &nbsp; Ended: &nbsp;
+            <ReactTimeAgo date={endTime} locale="en-US" timeStyle="round" />
+          </ListItem>
+        ) : Date.now() >= startTime ? (
+          <ListItem>
+            <TimerIcon /> &nbsp; Started: &nbsp;
+            <ReactTimeAgo date={startTime} locale="en-US" timeStyle="round" />
+          </ListItem>
+        ) : (
+          ""
+        )}
       </List>
       {status !== "CANCELLED" && Date.now() >= startTime && (
         <>

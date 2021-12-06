@@ -6,6 +6,8 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en.json";
 
 import { fetchPoolConfig } from "./redux/pool/configSlice";
 
@@ -14,6 +16,8 @@ import Home from "./pages/Home";
 import Pool from "./pages/Pool";
 import Profile from "./pages/Profile";
 import Explore from "./pages/Explore";
+
+TimeAgo.addDefaultLocale(en);
 
 const App = () => {
   const dispatch = useDispatch();
