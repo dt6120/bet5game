@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Countdown from "react-countdown";
-import ReactTimeAgo from "react-time-ago";
 
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
