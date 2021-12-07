@@ -63,7 +63,10 @@ export const enterPool = createAsyncThunk(
       }
 
       const { poolContract, tokenContract } = await getContracts();
-      const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
+      if (!window.ethereum) {
+        return rejectWithValue("Please install a web3 wallet first");
+      }
+      const provider = getProvider();
       const signer = provider.getSigner();
 
       const allowance = await tokenContract.allowance(
@@ -105,17 +108,20 @@ export const createPool = createAsyncThunk(
   async ({ entryFee, entryToken, decimals }, { rejectWithValue }) => {
     try {
       const { poolContract } = await getContracts();
-      const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
+      if (!window.ethereum) {
+        return rejectWithValue("Please install a web3 wallet first");
+      }
+      const provider = getProvider();
       const signer = provider.getSigner();
 
       entryFee = ethers.utils.parseUnits(entryFee, decimals);
       const tx = await poolContract
         .connect(signer)
         .createPool(entryFee, entryToken);
-      const receipt = await tx.wait();
-      console.log(receipt);
+      const { events } = await tx.wait();
+      const [event] = events.filter(({ event }) => event === "PoolCreated");
 
-      return Number(await poolContract.poolCounter());
+      return Number(event.args.poolId);
     } catch (error) {
       return rejectWithValue(
         error?.data?.message ? error.data.message.split(":")[1] : error?.message

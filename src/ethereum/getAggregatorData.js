@@ -116,7 +116,7 @@ const aggregatorAbi = [
 ];
 
 const getAggregatorData = async (aggregatorAddress) => {
-  const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
+  const provider = getProvider();
 
   const aggregatorContract = new ethers.Contract(
     aggregatorAddress,

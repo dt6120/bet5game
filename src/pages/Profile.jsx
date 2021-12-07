@@ -24,8 +24,6 @@ import {
   FETCH_USER_REWARDS,
 } from "../graphql/queries/profile";
 
-const drawerWidth = 240;
-
 const Profile = () => {
   const navigate = useNavigate();
 

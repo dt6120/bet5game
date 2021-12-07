@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import Masonry from "react-masonry-css";
 
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
@@ -10,18 +10,20 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
-import CircularProgress from "@mui/material/CircularProgress";
 import Pagination from "@mui/material/Pagination";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
+import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 
 import AllIcon from "@mui/icons-material/BlurOn";
 import ActiveIcon from "@mui/icons-material/AccessTimeFilled";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CompleteIcon from "@mui/icons-material/CheckCircle";
+import IconButton from "@mui/material/IconButton";
 import Skeleton from "@mui/material/Skeleton";
+import SearchIcon from "@mui/icons-material/ManageSearch";
 
 import client from "../graphql/client";
 import { FETCH_ALL_POOLS } from "../graphql/queries/fetchPools";
@@ -37,10 +39,11 @@ const Explore = () => {
   const [filteredPools, setFilteredPools] = useState([]);
   const [activeSort, setActiveSort] = useState("id-asc");
   const [activePage, setActivePage] = useState(1);
+  const [findPoolId, setFindPoolId] = useState("");
 
   // const [orderBy, setOrderBy] = useState("startTime");
   // const [orderDirection, setOrderDirection] = useState("asc");
-  const [first, setFirst] = useState(6);
+  const [first, setFirst] = useState(15);
   const [skip, setSkip] = useState(0);
 
   const handleTab = (tab) => {
@@ -88,7 +91,7 @@ const Explore = () => {
           skip: 0,
         },
       });
-      console.log(data);
+      // console.log(data);
       data = await Promise.all(
         data.map(
           async ({
@@ -144,13 +147,33 @@ const Explore = () => {
   }, [activeSort]);
 
   return (
-    <Container>
+    <Container maxWidth="xl">
       <Grid container spacing={5} sx={{ marginTop: 5, marginBottom: 5 }}>
         <Grid item xs={12} sm={5} md={3}>
           {/* <Typography component="h4" variant="h4" sx={{ marginBottom: 2 }}>
             Filters
           </Typography> */}
-          <List component={Paper}>
+          <FormControl sx={{ width: "100%", marginTop: 2 }}>
+            <InputLabel id="sort">Sort</InputLabel>
+            <Select
+              value={activeSort}
+              label="Sort"
+              id="sort"
+              onChange={(e) => setActiveSort(e.target.value)}
+              size="medium"
+              variant="outlined"
+            >
+              <MenuItem value={"id-asc"}>ID (Lowest first)</MenuItem>
+              <MenuItem value={"id-desc"}>ID (Latest first)</MenuItem>
+              <MenuItem value={"entryCount-asc"}>
+                Entry Count (Lowest First)
+              </MenuItem>
+              <MenuItem value={"entryCount-desc"}>
+                Entry Count (Highest First)
+              </MenuItem>
+            </Select>
+          </FormControl>
+          <List component={Paper} sx={{ marginTop: 6 }}>
             <ListItem
               button
               onClick={() => handleTab(0)}
@@ -166,7 +189,7 @@ const Explore = () => {
               selected={activeTab === 1}
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
-              <ActiveIcon /> &nbsp; Active Pools
+              <ActiveIcon color="success" /> &nbsp; Active Pools
             </ListItem>
             <ListItem
               button
@@ -174,7 +197,7 @@ const Explore = () => {
               selected={activeTab === 2}
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
-              <CompleteIcon /> &nbsp; Complete Pools
+              <CompleteIcon color="info" /> &nbsp; Complete Pools
             </ListItem>
             <ListItem
               button
@@ -182,12 +205,46 @@ const Explore = () => {
               selected={activeTab === 3}
               sx={{ paddingTop: 2, paddingBottom: 2 }}
             >
-              <CancelIcon /> &nbsp; Cancelled Pools
+              <CancelIcon color="error" /> &nbsp; Cancelled Pools
             </ListItem>
           </List>
         </Grid>
         <Grid item xs={12} sm={7} md={9}>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              paddingTop: 2,
+            }}
+          >
+            {!loading && (
+              <Box sx={{ display: "flex" }}>
+                <TextField
+                  id="outlined-basic"
+                  label="Find pool by ID"
+                  variant="outlined"
+                  size="medium"
+                  value={findPoolId}
+                  onChange={(e) => {
+                    setFindPoolId(e.target.value);
+                    setActiveTab(0);
+                    if (e.target.value) {
+                      setFilteredPools(
+                        pools.filter(
+                          ({ id }) =>
+                            id.toString() === e.target.value.toString()
+                        )
+                      );
+                    } else {
+                      setFilteredPools(pools);
+                    }
+                  }}
+                />
+                <Typography sx={{ marginLeft: 2, paddingTop: 2 }}>
+                  Found {filteredPools.length} pools
+                </Typography>
+              </Box>
+            )}
             <Pagination
               color="primary"
               count={loading ? 0 : Math.ceil(filteredPools.length / first)}
@@ -198,42 +255,22 @@ const Explore = () => {
               page={activePage}
               sx={{ paddingTop: 2 }}
             />
-            {!loading && (
-              <Typography sx={{ paddingTop: 2 }}>
-                Found {filteredPools.length} pools
-              </Typography>
-            )}
-            <FormControl sx={{ width: 250 }}>
-              <InputLabel id="sort">Sort</InputLabel>
-              <Select
-                value={activeSort}
-                label="Sort"
-                id="sort"
-                onChange={(e) => setActiveSort(e.target.value)}
-                size="small"
-                variant="filled"
-              >
-                <MenuItem value={"id-asc"}>ID (Lowest first)</MenuItem>
-                <MenuItem value={"id-desc"}>ID (Latest first)</MenuItem>
-                <MenuItem value={"entryCount-asc"}>
-                  Entry Count (Lowest First)
-                </MenuItem>
-                <MenuItem value={"entryCount-desc"}>
-                  Entry Count (Highest First)
-                </MenuItem>
-              </Select>
-            </FormControl>
           </Box>
           <Divider sx={{ marginTop: 3, marginBottom: 3 }} />
 
           <Grid container spacing={3}>
+            {/* <Masonry
+            breakpointCols={2}
+            className="my-masonry-grid"
+            columnClassName="my-masonry-grid_column"
+          > */}
             {loading
               ? [...Array(first).keys()].map((index) => (
-                  <Grid item xs={12} md={6} key={index}>
+                  <Grid item xs={12} md={4} key={index}>
                     <Skeleton
                       variant="rectangular"
                       animation="wave"
-                      height={240}
+                      height={70}
                     />
                   </Grid>
                 ))
@@ -249,7 +286,7 @@ const Explore = () => {
                       entryFee,
                       token,
                     }) => (
-                      <Grid item xs={12} md={6} key={id}>
+                      <Grid item xs={12} md={4} key={id}>
                         <PoolCard
                           id={id}
                           status={status}
@@ -263,6 +300,7 @@ const Explore = () => {
                     )
                   )}
           </Grid>
+          {/* </Masonry> */}
         </Grid>
       </Grid>
     </Container>

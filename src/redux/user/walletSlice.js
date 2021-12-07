@@ -12,9 +12,9 @@ export const connectWallet = createAsyncThunk(
   "user/wallet",
   async (arg, { rejectWithValue }) => {
     try {
-      const provider = await getProvider();
-      if (!provider) {
-        return rejectWithValue("No web3 provider found");
+      // const provider = getProvider();
+      if (!window.ethereum) {
+        return rejectWithValue("Please install a web3 wallet first");
       }
 
       const [account] = await window.ethereum.request({

@@ -3,9 +3,10 @@ import getProvider from "./getProvider";
 
 import { contracts } from "./artifacts.json";
 
+// async when provider had to be awaited
 const getContracts = async () => {
   const { Token, Bet5Game } = contracts;
-  const provider = new ethers.providers.Web3Provider(window.ethereum); // await getProvider();
+  const provider = getProvider();
 
   const tokenContract = new ethers.Contract(Token.address, Token.abi, provider);
   const poolContract = new ethers.Contract(

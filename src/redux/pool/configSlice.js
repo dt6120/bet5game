@@ -9,6 +9,8 @@ const initialState = {
   data: {},
   error: "",
   loading: false,
+  notifCount: 0,
+  notifList: [],
 };
 
 export const fetchPoolConfig = createAsyncThunk(
@@ -49,7 +51,19 @@ export const fetchPoolConfig = createAsyncThunk(
 export const configSlice = createSlice({
   name: "pool/config",
   initialState,
-  reducers: {},
+  reducers: {
+    updateNotif: (state, { payload }) => {
+      state.notifCount = state.notifCount + 1;
+      state.notifList = [
+        {
+          poolId: payload.poolId,
+          message: payload.message,
+          timestamp: Date.now(),
+        },
+        ...state.notifList,
+      ];
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchPoolConfig.pending, (state) => {
@@ -71,5 +85,7 @@ export const configSlice = createSlice({
       });
   },
 });
+
+export const { updateNotif } = configSlice.actions;
 
 export default configSlice.reducer;

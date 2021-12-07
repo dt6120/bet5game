@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import ReactTimeAgo from "react-time-ago";
 import getProvider from "../ethereum/getProvider";
 import { useDispatch, useSelector } from "react-redux";
 import { connectWallet, disconnect, update } from "../redux/user/walletSlice";
 import { createPool } from "../redux/pool/poolSlice";
+import { updateNotif } from "../redux/pool/configSlice";
 
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -24,12 +26,15 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
+import Badge from "@mui/material/Badge";
 import CircularProgress from "@mui/material/CircularProgress";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 
 import PlusIcon from "../assets/plus.png";
 import Logo from "../assets/logo.png";
 import UserAvatar from "../assets/avatar.png";
 import getTokenData from "../ethereum/getTokenData";
+import getContracts from "../ethereum/getContracts";
 
 const pages = ["Explore", "Profile"];
 const settings = ["Profile"];
@@ -37,6 +42,7 @@ const settings = ["Profile"];
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [notifAnchor, setNotifAnchor] = useState(null);
   const [createPoolOpen, setCreatePoolOpen] = useState(false);
   const [entryFee, setEntryFee] = useState("");
 
@@ -55,6 +61,8 @@ const Navbar = () => {
   const { address, loading } = wallet;
   const {
     data: { owner },
+    notifCount,
+    notifList,
   } = config;
   const { createId, createLoading } = pool;
 
@@ -103,17 +111,48 @@ const Navbar = () => {
     dispatch(createPool({ entryFee, entryToken: address, decimals }));
   };
 
-  useEffect(() => {
-    const handleAccountsChanged = ([account]) => dispatch(update(account));
+  const handleAccountChange = () => {
+    if (!window.ethereum) return;
+    if (window.ethereum?.selectedAddress) {
+      dispatch(connectWallet());
+    }
+    window.ethereum.removeListener("accountsChanged", ([account]) =>
+      dispatch(update(account))
+    );
+    window.ethereum.on("accountsChanged", ([account]) =>
+      dispatch(update(account))
+    );
+  };
 
-    getProvider().then((provider) => {
-      if (!provider) return;
-      if (provider?.selectedAddress) {
-        dispatch(connectWallet());
-      }
-      provider.removeListener("accountsChanged", handleAccountsChanged);
-      provider.on("accountsChanged", handleAccountsChanged);
-    });
+  const handleNotifUpdate = async () => {
+    try {
+      const { poolContract } = await getContracts();
+
+      poolContract.on("PoolCreated", (data) => {
+        dispatch(
+          updateNotif({
+            poolId: Number(data),
+            message: `Pool ${Number(data)} created`,
+          })
+        );
+      });
+      poolContract.on("PoolCancelled", (data) => {
+        dispatch(
+          updateNotif({
+            poolId: Number(data),
+            message: `Pool ${Number(data)} cancelled`,
+          })
+        );
+      });
+      // poolContract.on("PoolRewardTransfer", (data) => {})
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  useEffect(() => {
+    handleAccountChange();
+    handleNotifUpdate();
   }, []);
 
   useEffect(() => {
@@ -223,6 +262,52 @@ const Navbar = () => {
               </Button>
             ) : (
               <>
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  sx={{ marginRight: 3 }}
+                  onClick={(e) => setNotifAnchor(e.currentTarget)}
+                >
+                  <Badge badgeContent={notifCount} color="error">
+                    <NotificationsIcon />
+                  </Badge>
+                </IconButton>
+                <Menu
+                  anchorEl={notifAnchor}
+                  open={Boolean(notifAnchor)}
+                  onClose={() => setNotifAnchor(null)}
+                >
+                  {notifList.length > 0 ? (
+                    notifList
+                      .slice(0, 5)
+                      .map(({ message, timestamp, poolId }) => (
+                        <MenuItem
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            width: "300",
+                          }}
+                          onClick={() => {
+                            setNotifAnchor(null);
+                            navigate(`/pools/${poolId}`);
+                          }}
+                        >
+                          <Typography variant="body1">{message}</Typography>
+                          <Typography variant="caption" sx={{ marginLeft: 5 }}>
+                            <ReactTimeAgo
+                              date={timestamp}
+                              locale="en-US"
+                              timeStyle="round-minute"
+                            />
+                          </Typography>
+                        </MenuItem>
+                      ))
+                  ) : (
+                    <MenuItem onClick={() => setNotifAnchor(null)}>
+                      No notifications
+                    </MenuItem>
+                  )}
+                </Menu>
                 {owner && address.toLowerCase() === owner.toLowerCase() && (
                   <Chip
                     avatar={<Avatar alt="Create Pool" src={PlusIcon} />}

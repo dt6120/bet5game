@@ -75,7 +75,7 @@ module.exports = {
     },
 
     mumbai: {
-      url: "https://rpc-mumbai.maticvigil.com/",
+      url: process.env.ALCHEMY_MUMBAI_RPC_URL,
       chainId: 80001,
       accounts: {
         mnemonic: process.env.MNEMONIC,
