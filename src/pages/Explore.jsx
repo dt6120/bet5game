@@ -163,7 +163,6 @@ const Explore = () => {
               variant="outlined"
             >
               <MenuItem value={"id-asc"}>ID (Lowest first)</MenuItem>
-              <MenuItem value={"id-asc"}>ID (Lowest first)</MenuItem>
               <MenuItem value={"id-desc"}>ID (Latest first)</MenuItem>
               <MenuItem value={"entryCount-asc"}>
                 Entry Count (Lowest First)

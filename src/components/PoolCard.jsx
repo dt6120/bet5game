@@ -9,6 +9,7 @@ import CardHeader from "@mui/material/CardHeader";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import Avatar from "@mui/material/Avatar";
+import Grow from "@mui/material/Grow";
 import Button from "@mui/material/Button";
 import CardActions from "@mui/material/CardActions";
 import { red, blue, green } from "@mui/material/colors";
@@ -85,7 +86,11 @@ const PoolCard = ({
           }
         />
         {contentShow && (
-          <>
+          <Grow
+            in={contentShow}
+            style={{ transformOrigin: "0 0 0" }}
+            {...(contentShow ? { timeout: 1000 } : {})}
+          >
             <CardContent>
               <List>
                 <ListItem>
@@ -100,10 +105,7 @@ const PoolCard = ({
                 </ListItem>
               </List>
             </CardContent>
-            {/* <CardActions>
-              <Button onClick={() => navigate(`/pools/${id}`)}>View</Button>
-            </CardActions> */}
-          </>
+          </Grow>
         )}
       </CardActionArea>
     </Card>

@@ -1,9 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import getProvider from "../../ethereum/getProvider";
-import getContracts from "../../ethereum/getContracts";
-import getTokenData from "../../ethereum/getTokenData";
-import { toast } from "react-toastify";
-import { ethers } from "ethers";
+import { poolContract } from "../../ethereum/getContracts";
 
 const initialState = {
   data: {},
@@ -17,8 +13,6 @@ export const fetchPoolConfig = createAsyncThunk(
   "pool/config",
   async (id, { rejectWithValue }) => {
     try {
-      const { poolContract } = await getContracts();
-
       const owner = await poolContract.owner();
       const winnerCount = Number(await poolContract.WINNER_COUNT());
       const minEntryCount = Number(await poolContract.MIN_ENTRY_COUNT());

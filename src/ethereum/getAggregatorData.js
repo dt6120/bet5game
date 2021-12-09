@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import getProvider from "./getProvider";
+import { httpsProvider as provider } from "./getProvider";
 
 const aggregatorAbi = [
   {
@@ -116,8 +116,6 @@ const aggregatorAbi = [
 ];
 
 const getAggregatorData = async (aggregatorAddress) => {
-  const provider = getProvider();
-
   const aggregatorContract = new ethers.Contract(
     aggregatorAddress,
     aggregatorAbi,

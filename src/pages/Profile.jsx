@@ -11,7 +11,8 @@ import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
-import Divider from "@mui/material/Divider";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import AllIcon from "@mui/icons-material/BlurOn";
 import ActiveIcon from "@mui/icons-material/AccessTimeFilled";
@@ -38,27 +39,10 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [pools, setPools] = useState([]);
-  const [filteredPools, setFilteredPools] = useState([]);
   const [rewards, setRewards] = useState([]);
-  const [filteredRewards, setFilteredRewards] = useState([]);
 
   const handleTab = (tab) => {
     setActiveTab(tab);
-    setFilteredPools(
-      pools.filter(({ status }) => {
-        if (tab === 0) {
-          return status !== "";
-        } else if (tab === 1) {
-          return status === "ACTIVE";
-        } else if (tab === 2) {
-          return status === "COMPLETE";
-        } else if (tab === 3) {
-          return status === "CANCELLED";
-        } else {
-          return status !== "";
-        }
-      })
-    );
   };
 
   const fetchUserData = async () => {
@@ -171,6 +155,14 @@ const Profile = () => {
         <Grid item xs={12} sm={7} md={9}>
           {loading ? (
             <CircularProgress />
+          ) : pools.length === 0 ? (
+            <Box sx={{ display: "flex", justifyContent: "space-around" }}>
+              <Alert severity="info" fullWidth>
+                You haven't participated in any pools. Enter active pools to win
+                upto 15x rewards.
+              </Alert>
+              <Button color="info">Explore</Button>
+            </Box>
           ) : activeTab === 0 ? (
             <Dashboard rewards={rewards} pools={pools} />
           ) : activeTab === 1 ? (

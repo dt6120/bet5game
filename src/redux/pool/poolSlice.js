@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import getProvider from "../../ethereum/getProvider";
-import getContracts from "../../ethereum/getContracts";
+import { httpsProvider as provider } from "../../ethereum/getProvider";
+import { poolContract, tokenContract } from "../../ethereum/getContracts";
 import getTokenData from "../../ethereum/getTokenData";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
@@ -24,7 +24,6 @@ export const fetchPoolData = createAsyncThunk(
   "pool/data",
   async (id, { rejectWithValue }) => {
     try {
-      const { poolContract } = await getContracts();
       if (id > Number(await poolContract.poolCounter())) {
         return rejectWithValue(`Pool ${id} does not exist`);
       }
@@ -62,11 +61,9 @@ export const enterPool = createAsyncThunk(
         return rejectWithValue("Select 5 tokens to enter");
       }
 
-      const { poolContract, tokenContract } = await getContracts();
       if (!window.ethereum) {
         return rejectWithValue("Please install a web3 wallet first");
       }
-      const provider = getProvider();
       const signer = provider.getSigner();
 
       const allowance = await tokenContract.allowance(
@@ -107,11 +104,9 @@ export const createPool = createAsyncThunk(
   "pool/create",
   async ({ entryFee, entryToken, decimals }, { rejectWithValue }) => {
     try {
-      const { poolContract } = await getContracts();
       if (!window.ethereum) {
         return rejectWithValue("Please install a web3 wallet first");
       }
-      const provider = getProvider();
       const signer = provider.getSigner();
 
       entryFee = ethers.utils.parseUnits(entryFee, decimals);
@@ -134,7 +129,6 @@ export const fetchPoolTable = createAsyncThunk(
   "pool/table",
   async ({ poolId, entries }, { rejectWithValue }) => {
     try {
-      const { poolContract } = await getContracts();
       const fee = await poolContract.FEE();
       const pool = await poolContract.pools(poolId);
 

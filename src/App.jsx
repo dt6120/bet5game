@@ -12,7 +12,8 @@ import en from "javascript-time-ago/locale/en.json";
 import { connectWallet, update } from "./redux/user/walletSlice";
 import { updateNotif } from "./redux/pool/configSlice";
 import { fetchPoolConfig } from "./redux/pool/configSlice";
-import getContracts from "./ethereum/getContracts";
+import { wssProvider } from "./ethereum/getProvider";
+import { poolContractWithProvider } from "./ethereum/getContracts";
 
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -54,7 +55,7 @@ const App = () => {
 
   const handleNotifUpdate = async () => {
     try {
-      const { poolContract } = await getContracts();
+      const poolContract = poolContractWithProvider(wssProvider);
 
       poolContract.on("PoolCreated", (data) => {
         dispatch(
@@ -64,6 +65,7 @@ const App = () => {
           })
         );
       });
+
       poolContract.on("PoolCancelled", (data) => {
         dispatch(
           updateNotif({
@@ -98,7 +100,7 @@ const App = () => {
     () =>
       createTheme({
         palette: {
-          mode: prefersDarkMode ? "light" : "light",
+          mode: prefersDarkMode ? "dark" : "light",
         },
       }),
     [prefersDarkMode]

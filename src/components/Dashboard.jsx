@@ -5,45 +5,120 @@ import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
+import LinearProgress from "@mui/material/LinearProgress";
 
-const Dashboard = ({ rewards, pools }) => {
-  const [reducedTokenReward, setReducedTokenReward] = useState([]);
-  const [reducedTokenDeposit, setReducedTokenDeposit] = useState([]);
+const Dashboard = ({ rewards = [], pools = [] }) => {
+  const [reducedRewards, setReducedRewards] = useState({});
+  const [reducedDeposits, setReducedDeposits] = useState({});
 
-  console.log(pools);
-  console.log(rewards);
+  const buildRewardChart = () => {
+    let reducedTokenReward = {};
 
-  let chart;
+    rewards.forEach(({ id, poolId, amount, token: { symbol } }) => {
+      if (reducedTokenReward[symbol]) {
+        const prevAmount = reducedTokenReward[symbol];
+        reducedTokenReward = {
+          ...reducedTokenReward,
+          [symbol]: Number(prevAmount) + Number(amount),
+        };
+      } else {
+        reducedTokenReward = { ...reducedTokenReward, [symbol]: amount };
+      }
+    });
 
-  const buildChart = () => {
-    const ctx = document.getElementById("token-deposit").getContext("2d");
-    typeof chart !== "undefined" && chart.destroy();
+    setReducedRewards(reducedTokenReward);
 
-    chart = new Chart(ctx, {
-      type: "pie",
+    // let reducedRewardChart;
+    const ctx = document.getElementById("token-reward").getContext("2d");
+    // typeof reducedRewardChart !== "undefined" && reducedRewardChart.destroy();
+
+    // reducedRewardChart =
+    new Chart(ctx, {
+      type: "doughnut",
       data: {
-        labels: rewards.slice(0, 1).map(({ token: { symbol } }) => symbol),
-        datasets: rewards.slice(0, 1).map(({ poolId, amount }) => ({
-          // label: poolId,
-          data: amount,
-          fill: true,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.5,
-        })),
+        labels: Object.keys(reducedTokenReward),
+        datasets: [
+          {
+            data: Object.values(reducedTokenReward),
+            fill: true,
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1,
+          },
+        ],
+      },
+    });
+  };
+
+  const buildDepositChart = () => {
+    let reducedTokenDeposit = {};
+
+    pools.forEach(({ id, entryFee, token: { symbol } }) => {
+      if (reducedTokenDeposit[symbol]) {
+        const prevAmount = reducedTokenDeposit[symbol];
+        reducedTokenDeposit = {
+          ...reducedTokenDeposit,
+          [symbol]: Number(prevAmount) + Number(entryFee),
+        };
+      } else {
+        reducedTokenDeposit = { ...reducedTokenDeposit, [symbol]: entryFee };
+      }
+    });
+
+    setReducedDeposits(reducedTokenDeposit);
+
+    // let reducedRewardChart;
+    const ctx = document.getElementById("token-deposit").getContext("2d");
+    // typeof reducedRewardChart !== "undefined" && reducedRewardChart.destroy();
+
+    // reducedRewardChart =
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: Object.keys(reducedTokenDeposit),
+        datasets: [
+          {
+            data: Object.values(reducedTokenDeposit),
+            fill: true,
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1,
+          },
+        ],
+      },
+    });
+  };
+
+  const buildWinLossChart = () => {
+    const ctx = document.getElementById("win-loss-ratio").getContext("2d");
+
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["Wins", "Losses"],
+        datasets: [
+          {
+            data: [rewards.length, pools.length - rewards.length],
+            borderColor: ["rgb(102, 255, 102)", "rgb(255, 51, 0)"],
+            // backgroundColor: ["rgb(102, 255, 102)", "rgb(255, 51, 0)"],
+            hoverOffset: 1,
+            tension: 0.5,
+          },
+        ],
       },
     });
   };
 
   useEffect(() => {
-    buildChart();
+    buildRewardChart();
+    buildDepositChart();
+    buildWinLossChart();
   }, []);
 
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={4}>
-        <Paper elevation={3} variant="outlined" sx={{ padding: 2 }}>
+        <Paper elevation={3} sx={{ padding: 2, borderRadius: 5 }}>
           <Typography component="h4" variant="h4">
-            Pools entered
+            # Pools entered
           </Typography>
           <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
           <Typography component="h4" variant="h4">
@@ -52,9 +127,9 @@ const Dashboard = ({ rewards, pools }) => {
         </Paper>
       </Grid>
       <Grid item xs={12} md={4}>
-        <Paper elevation={3} variant="outlined" sx={{ padding: 2 }}>
+        <Paper elevation={3} sx={{ padding: 2, borderRadius: 5 }}>
           <Typography component="h4" variant="h4">
-            Pools won
+            # Pools won
           </Typography>
           <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
           <Typography component="h4" variant="h4">
@@ -63,18 +138,18 @@ const Dashboard = ({ rewards, pools }) => {
         </Paper>
       </Grid>
       <Grid item xs={12} md={4}>
-        <Paper elevation={3} variant="outlined" sx={{ padding: 2 }}>
+        <Paper elevation={3} sx={{ padding: 2, borderRadius: 5 }}>
           <Typography component="h4" variant="h4">
-            Win / Loss Ratio
+            Win Percentage
           </Typography>
           <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
           <Typography component="h4" variant="h4">
-            {(rewards.length / (pools.length - rewards.length)).toFixed(3)}
+            {((rewards.length * 100) / pools.length).toFixed(2)} %
           </Typography>
         </Paper>
       </Grid>
       <Grid item xs={12} md={4}>
-        <Paper elevation={3} variant="outlined" sx={{ padding: 2 }}>
+        <Paper elevation={3} sx={{ padding: 2, borderRadius: 5 }}>
           <Typography component="h4" variant="h4">
             Tokens deposited
           </Typography>
@@ -83,14 +158,21 @@ const Dashboard = ({ rewards, pools }) => {
         </Paper>
       </Grid>
       <Grid item xs={12} md={4}>
-        <Paper elevation={3} variant="outlined" sx={{ padding: 2 }}>
+        <Paper elevation={3} sx={{ padding: 2, borderRadius: 5 }}>
           <Typography component="h4" variant="h4">
             Tokens won
           </Typography>
           <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
+          <canvas id="token-reward" />
+        </Paper>
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <Paper elevation={3} sx={{ padding: 2, borderRadius: 5 }}>
           <Typography component="h4" variant="h4">
-            1000
+            Win / Loss Ratio
           </Typography>
+          <Divider sx={{ marginTop: 1, marginBottom: 2 }} />
+          <canvas id="win-loss-ratio" />
         </Paper>
       </Grid>
     </Grid>

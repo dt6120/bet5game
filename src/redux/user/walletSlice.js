@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import getProvider from "../../ethereum/getProvider";
 import { toast } from "react-toastify";
 
 const initialState = {

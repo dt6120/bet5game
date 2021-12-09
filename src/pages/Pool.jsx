@@ -7,10 +7,7 @@ import { ethers } from "ethers";
 
 import { enterPool, fetchPoolData } from "../redux/pool/poolSlice";
 import getAggregatorData from "../ethereum/getAggregatorData";
-import getTokenData from "../ethereum/getTokenData";
-import client from "../graphql/client";
-import { FETCH_ID_POOL } from "../graphql/queries/fetchPools";
-import getContracts from "../ethereum/getContracts";
+import { poolContract } from "../ethereum/getContracts";
 
 import PoolTable from "../components/PoolTable";
 import PoolInfo from "../components/PoolInfo";
@@ -108,7 +105,6 @@ const Pool = () => {
   };
 
   const handleCancel = async () => {
-    const { poolContract } = await getContracts();
     const entryCount = (await poolContract.getPoolEntries(poolId)).length;
 
     if (entryCount >= minEntryCount) {
@@ -130,7 +126,6 @@ const Pool = () => {
     setBackdropOpen(true);
     setBackdropText("Distributing pool rewards");
 
-    const { poolContract } = await getContracts();
     poolContract.once("PoolRewardTransfer", () => {
       dispatch(fetchPoolData(poolId));
       setBackdropOpen(false);
