@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import Masonry from "react-masonry-css";
 
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
@@ -164,6 +163,7 @@ const Explore = () => {
               variant="outlined"
             >
               <MenuItem value={"id-asc"}>ID (Lowest first)</MenuItem>
+              <MenuItem value={"id-asc"}>ID (Lowest first)</MenuItem>
               <MenuItem value={"id-desc"}>ID (Latest first)</MenuItem>
               <MenuItem value={"entryCount-asc"}>
                 Entry Count (Lowest First)
@@ -230,9 +230,8 @@ const Explore = () => {
                     setActiveTab(0);
                     if (e.target.value) {
                       setFilteredPools(
-                        pools.filter(
-                          ({ id }) =>
-                            id.toString() === e.target.value.toString()
+                        pools.filter(({ id }) =>
+                          id.toString().startsWith(e.target.value.toString())
                         )
                       );
                     } else {

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactTimeAgo from "react-time-ago";
-import getProvider from "../ethereum/getProvider";
 import { useDispatch, useSelector } from "react-redux";
-import { connectWallet, disconnect, update } from "../redux/user/walletSlice";
+import { connectWallet, disconnect } from "../redux/user/walletSlice";
 import { createPool } from "../redux/pool/poolSlice";
-import { updateNotif } from "../redux/pool/configSlice";
 
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -34,7 +32,6 @@ import PlusIcon from "../assets/plus.png";
 import Logo from "../assets/logo.png";
 import UserAvatar from "../assets/avatar.png";
 import getTokenData from "../ethereum/getTokenData";
-import getContracts from "../ethereum/getContracts";
 
 const pages = ["Explore", "Profile"];
 const settings = ["Profile"];
@@ -110,50 +107,6 @@ const Navbar = () => {
     const { address, decimals } = entryTokenData;
     dispatch(createPool({ entryFee, entryToken: address, decimals }));
   };
-
-  const handleAccountChange = () => {
-    if (!window.ethereum) return;
-    if (window.ethereum?.selectedAddress) {
-      dispatch(connectWallet());
-    }
-    window.ethereum.removeListener("accountsChanged", ([account]) =>
-      dispatch(update(account))
-    );
-    window.ethereum.on("accountsChanged", ([account]) =>
-      dispatch(update(account))
-    );
-  };
-
-  const handleNotifUpdate = async () => {
-    try {
-      const { poolContract } = await getContracts();
-
-      poolContract.on("PoolCreated", (data) => {
-        dispatch(
-          updateNotif({
-            poolId: Number(data),
-            message: `Pool ${Number(data)} created`,
-          })
-        );
-      });
-      poolContract.on("PoolCancelled", (data) => {
-        dispatch(
-          updateNotif({
-            poolId: Number(data),
-            message: `Pool ${Number(data)} cancelled`,
-          })
-        );
-      });
-      // poolContract.on("PoolRewardTransfer", (data) => {})
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-
-  useEffect(() => {
-    handleAccountChange();
-    handleNotifUpdate();
-  }, []);
 
   useEffect(() => {
     if (createId) {

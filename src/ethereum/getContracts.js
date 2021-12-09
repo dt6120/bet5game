@@ -7,6 +7,9 @@ import { contracts } from "./artifacts.json";
 const getContracts = async () => {
   const { Token, Bet5Game } = contracts;
   const provider = getProvider();
+  // const provider = new ethers.providers.JsonRpcProvider(
+  //   process.env.MORALIS_MUMBAI_RPC_URL
+  // );
 
   const tokenContract = new ethers.Contract(Token.address, Token.abi, provider);
   const poolContract = new ethers.Contract(

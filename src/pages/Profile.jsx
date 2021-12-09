@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { ethers } from "ethers";
 
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
@@ -11,13 +12,18 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
-
+import CircularProgress from "@mui/material/CircularProgress";
 import AllIcon from "@mui/icons-material/BlurOn";
 import ActiveIcon from "@mui/icons-material/AccessTimeFilled";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CompleteIcon from "@mui/icons-material/CheckCircle";
 import RewardIcon from "@mui/icons-material/Stars";
 
+import Dashboard from "../components/Dashboard";
+import MyPools from "../components/MyPools";
+import MyRewards from "../components/MyRewards";
+
+import getTokenData from "../ethereum/getTokenData";
 import client from "../graphql/client";
 import {
   FECTH_USER_POOLS,
@@ -65,8 +71,33 @@ const Profile = () => {
         query: FECTH_USER_POOLS,
         variables: { address },
       });
-      setPools(users[0].pools);
-      console.log(users[0].pools);
+      setPools(
+        await Promise.all(
+          users[0].pools.map(
+            async ({
+              id,
+              status,
+              startTime,
+              endTime,
+              entryCount,
+              entryFee,
+              token: address,
+            }) => {
+              const { symbol, decimals } = await getTokenData(address);
+
+              return {
+                id: Number(id),
+                status,
+                startTime: Number(startTime),
+                endTime: Number(endTime),
+                entryCount: Number(entryCount),
+                entryFee: ethers.utils.formatUnits(entryFee, decimals),
+                token: { address, symbol },
+              };
+            }
+          )
+        )
+      );
 
       const {
         data: { rewards },
@@ -74,8 +105,19 @@ const Profile = () => {
         query: FETCH_USER_REWARDS,
         variables: { address },
       });
-      setRewards(rewards);
-      console.log(rewards);
+      setRewards(
+        await Promise.all(
+          rewards.map(async ({ amount, id, pool }) => {
+            const { symbol, decimals } = await getTokenData(pool.token);
+            return {
+              id,
+              amount: ethers.utils.formatUnits(amount, decimals),
+              poolId: Number(pool.id),
+              token: { symbol, address: pool.token },
+            };
+          })
+        )
+      );
 
       setLoading(false);
     } catch (error) {
@@ -91,7 +133,7 @@ const Profile = () => {
   }, [address]);
 
   return (
-    <Container>
+    <Container maxWidth="xl">
       <Grid container spacing={5} sx={{ marginTop: 5 }}>
         <Grid item xs={12} sm={5} md={3}>
           {/* <Typography component="h4" variant="h4" sx={{ marginBottom: 2 }}>
@@ -106,7 +148,7 @@ const Profile = () => {
             >
               <AllIcon /> &nbsp; Dashboard
             </ListItem>
-            <Divider />
+            {/* <Divider /> */}
             <ListItem
               button
               onClick={() => handleTab(1)}
@@ -115,7 +157,7 @@ const Profile = () => {
             >
               <ActiveIcon /> &nbsp; My Pools
             </ListItem>
-            <Divider />
+            {/* <Divider /> */}
             <ListItem
               button
               onClick={() => handleTab(2)}
@@ -127,9 +169,15 @@ const Profile = () => {
           </List>
         </Grid>
         <Grid item xs={12} sm={7} md={9}>
-          <Typography component="h4" variant="h4" sx={{ marginBottom: 2 }}>
-            Data
-          </Typography>
+          {loading ? (
+            <CircularProgress />
+          ) : activeTab === 0 ? (
+            <Dashboard rewards={rewards} pools={pools} />
+          ) : activeTab === 1 ? (
+            <MyPools pools={pools} />
+          ) : (
+            <MyRewards rewards={rewards} />
+          )}
         </Grid>
       </Grid>
     </Container>

@@ -32,11 +32,12 @@ const PoolCard = ({
 
   return (
     // <Card onClick={() => navigate(`/pools/${id}`)}>
-    <Card onClick={() => navigate(`/pools/${id}`)}>
-      <CardActionArea
-        onMouseOver={() => setContentShow(true)}
-        onMouseOutCapture={() => setContentShow(false)}
-      >
+    <Card
+      onClick={() => navigate(`/pools/${id}`)}
+      onMouseOver={() => setContentShow(true)}
+      onMouseOutCapture={() => setContentShow(false)}
+    >
+      <CardActionArea>
         <CardHeader
           avatar={
             <Avatar
