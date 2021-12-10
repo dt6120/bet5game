@@ -32,7 +32,7 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: "https://polygon-rpc.com/", // "https://rpc-mumbai.maticvigil.com/", // `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
+        url: process.env.ALCHEMY_MUMBAI_RPC_URL,
       },
       accounts: {
         count: 20,
@@ -48,30 +48,6 @@ module.exports = {
         initialIndex: 0,
         count: 5,
       },
-    },
-
-    ropsten: {
-      url: process.env.ROPSTEN_RPC_URL,
-      chainId: 3,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 5,
-      },
-      saveDeployments: true,
-    },
-
-    kovan: {
-      url: process.env.KOVAN_RPC_URL,
-      chainId: 42,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 5,
-      },
-      saveDeployments: true,
     },
 
     mumbai: {
