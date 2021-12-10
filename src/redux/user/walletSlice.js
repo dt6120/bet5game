@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// import WalletConnectProvider from "@walletconnect/web3-provider";
 import { toast } from "react-toastify";
+
+import addNetwork from "../../ethereum/addNetwork";
 
 const initialState = {
   loading: false,
@@ -11,16 +14,28 @@ export const connectWallet = createAsyncThunk(
   "user/wallet",
   async (arg, { rejectWithValue }) => {
     try {
-      // const provider = getProvider();
-      if (!window.ethereum) {
-        return rejectWithValue("Please install a web3 wallet first");
+      let address;
+
+      if (window.ethereum) {
+        await addNetwork();
+        [address] = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+      } else {
+        // const provider = new WalletConnectProvider({
+        //   rpc: {
+        //     80001: process.env.REACT_APP_ALCHEMY_MUMBAI_RPC_URL,
+        //   },
+        // });
+        // await provider.enable();
+
+        // [address] = await provider.request({
+        //   method: "eth_requestAccounts",
+        // });
+        return rejectWithValue("Install web3 wallet first");
       }
 
-      const [account] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      return account;
+      return address;
     } catch (error) {
       return rejectWithValue(error?.message);
     }

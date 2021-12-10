@@ -20,6 +20,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
 import Alert from "@mui/material/Alert";
+import Chip from "@mui/material/Chip";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RankingIcon from "@mui/icons-material/MilitaryTech";
@@ -30,12 +31,12 @@ import TokenIcon from "@mui/icons-material/BubbleChart";
 import UpIcon from "@mui/icons-material/ArrowDropUp";
 import DownIcon from "@mui/icons-material/ArrowDropDown";
 
+import mumbaiAggregators from "../ethereum/mumbaiAggregators.json";
+
 const PoolTable = ({ poolId, status, startTime, token, entries }) => {
   const dispatch = useDispatch();
   const { address: userAddress } = useSelector((state) => state.wallet);
-  const { tableLoading, tableError, tableData } = useSelector(
-    (state) => state.pool
-  );
+  const { tableLoading, tableData } = useSelector((state) => state.pool);
   // const { type, table } = tableData;
   const type = tableData?.type;
   const table = tableData?.table;
@@ -45,6 +46,7 @@ const PoolTable = ({ poolId, status, startTime, token, entries }) => {
 
   useEffect(() => {
     dispatch(fetchPoolTable({ poolId, entries }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poolId]);
 
   // useEffect(() => {
@@ -162,7 +164,13 @@ const PoolTable = ({ poolId, status, startTime, token, entries }) => {
             sx={{ textAlign: "center" }}
           >
             {viewTokens.map((token, index) => (
-              <Typography>{token}</Typography>
+              <Chip
+                label={Object.keys(mumbaiAggregators).find(
+                  (key) => mumbaiAggregators[key] === token
+                )}
+                key={index}
+                sx={{ m: 2 }}
+              />
             ))}
           </DialogContentText>
         </DialogContent>

@@ -6,7 +6,6 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Pagination from "@mui/material/Pagination";
 import TextField from "@mui/material/TextField";
-import Skeleton from "@mui/material/Skeleton";
 import IconButton from "@mui/material/IconButton";
 
 import SortIcon from "@mui/icons-material/Sort";
@@ -18,7 +17,8 @@ const MyPools = ({ pools }) => {
   const [activePage, setActivePage] = useState(1);
   const [findPoolId, setFindPoolId] = useState("");
 
-  const [first, setFirst] = useState(15);
+  const first = 15;
+
   const [skip, setSkip] = useState(0);
   const [orderDirection, setOrderDirection] = useState("desc");
 
@@ -28,6 +28,7 @@ const MyPools = ({ pools }) => {
         orderDirection === "desc" ? y.id - x.id : x.id - y.id
       )
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderDirection]);
 
   return (
@@ -113,7 +114,6 @@ const MyPools = ({ pools }) => {
             )
           )}
       </Grid>
-      {/* </Grid> */}
     </>
   );
 };

@@ -20,9 +20,7 @@ import AllIcon from "@mui/icons-material/BlurOn";
 import ActiveIcon from "@mui/icons-material/AccessTimeFilled";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CompleteIcon from "@mui/icons-material/CheckCircle";
-import IconButton from "@mui/material/IconButton";
 import Skeleton from "@mui/material/Skeleton";
-import SearchIcon from "@mui/icons-material/ManageSearch";
 
 import client from "../graphql/client";
 import { FETCH_ALL_POOLS } from "../graphql/queries/fetchPools";
@@ -42,7 +40,7 @@ const Explore = () => {
 
   // const [orderBy, setOrderBy] = useState("startTime");
   // const [orderDirection, setOrderDirection] = useState("asc");
-  const [first, setFirst] = useState(15);
+  const first = 15;
   const [skip, setSkip] = useState(0);
 
   const handleTab = (tab) => {
@@ -130,6 +128,7 @@ const Explore = () => {
   };
 
   useEffect(() => {
+    // if (!window.ethereum) return navigate("/");
     fetchPools();
   }, []);
 
@@ -143,6 +142,7 @@ const Explore = () => {
           : y[orderBy] - x[orderBy]
       )
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSort]);
 
   return (

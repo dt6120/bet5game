@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
@@ -9,15 +9,12 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import AllIcon from "@mui/icons-material/BlurOn";
 import ActiveIcon from "@mui/icons-material/AccessTimeFilled";
-import CancelIcon from "@mui/icons-material/Cancel";
-import CompleteIcon from "@mui/icons-material/CheckCircle";
 import RewardIcon from "@mui/icons-material/Stars";
 
 import Dashboard from "../components/Dashboard";
@@ -111,9 +108,12 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    // if (!window.ethereum) return navigate("/");
+
     if (address) {
       fetchUserData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
   return (
@@ -153,15 +153,19 @@ const Profile = () => {
           </List>
         </Grid>
         <Grid item xs={12} sm={7} md={9}>
-          {loading ? (
-            <CircularProgress />
+          {!address ? (
+            <Alert severity="info">Connect wallet to view dashboard.</Alert>
+          ) : loading ? (
+            <CircularProgress size={70} />
           ) : pools.length === 0 ? (
             <Box sx={{ display: "flex", justifyContent: "space-around" }}>
-              <Alert severity="info" fullWidth>
+              <Alert severity="info">
                 You haven't participated in any pools. Enter active pools to win
                 upto 15x rewards.
               </Alert>
-              <Button color="info">Explore</Button>
+              <Button color="info" onClick={() => navigate("/explore")}>
+                Explore
+              </Button>
             </Box>
           ) : activeTab === 0 ? (
             <Dashboard rewards={rewards} pools={pools} />

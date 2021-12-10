@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// import WalletConnectProvider from "@walletconnect/web3-provider";
+import { ethers } from "ethers";
 import { httpsProvider as provider } from "../../ethereum/getProvider";
 import { poolContract, tokenContract } from "../../ethereum/getContracts";
 import getTokenData from "../../ethereum/getTokenData";
 import { toast } from "react-toastify";
-import { ethers } from "ethers";
 
 const initialState = {
   poolLoading: false,
@@ -82,14 +83,14 @@ export const enterPool = createAsyncThunk(
       }
       const tx = await poolContract.connect(signer).enterPool(id, tokens);
       // const { transactionHash } =
-      const { transactionHash, events } = await tx.wait();
+      const { transactionHash } = await tx.wait();
 
-      const { poolId, user, prices } = events.filter(
-        (event) => event.event === "PoolEntered"
-      )[0].args;
-      console.log(
-        events.filter((event) => event.event === "PoolEntered")[0].args
-      );
+      // const { poolId, user, prices } = events.filter(
+      //   (event) => event.event === "PoolEntered"
+      // )[0].args;
+      // console.log(
+      //   events.filter((event) => event.event === "PoolEntered")[0].args
+      // );
 
       return transactionHash;
     } catch (error) {

@@ -1,4 +1,4 @@
-const addNetwork = async (type) => {
+const addNetwork = async () => {
   // params = [{
   //     chainId: '0x89 ',
   //     chainName: 'Matic Mainnet ',
@@ -13,11 +13,11 @@ const addNetwork = async (type) => {
 
   const params = [
     {
-      chainId: "0x13881 ",
-      chainName: "Polygon Testnet ",
+      chainId: "0x13881",
+      chainName: "Polygon Testnet",
       nativeCurrency: {
-        name: "MATIC ",
-        symbol: "MATIC ",
+        name: "MATIC",
+        symbol: "MATIC",
         decimals: 18,
       },
       rpcUrls: ["https://rpc-mumbai.maticvigil.com/"],
@@ -25,9 +25,23 @@ const addNetwork = async (type) => {
     },
   ];
 
-  window.ethereum &&
-    window.ethereum
-      .request({ method: "wallet_addEthereumChain ", params })
-      .then(() => console.log("Success"))
-      .catch((error) => console.log("Error", error.message));
+  try {
+    await window?.ethereum?.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0x13881" }],
+    });
+  } catch (switchError) {
+    // This error code indicates that the chain has not been added to MetaMask.
+    if (switchError.code === 4902) {
+      await window?.ethereum?.request({
+        method: "wallet_addEthereumChain",
+        params,
+      });
+    } else {
+      throw new Error(switchError);
+    }
+    // handle other "switch" errors
+  }
 };
+
+export default addNetwork;

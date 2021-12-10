@@ -1,16 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Chart from "chart.js/auto";
 
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
-import LinearProgress from "@mui/material/LinearProgress";
 
 const Dashboard = ({ rewards = [], pools = [] }) => {
-  const [reducedRewards, setReducedRewards] = useState({});
-  const [reducedDeposits, setReducedDeposits] = useState({});
-
   const buildRewardChart = () => {
     let reducedTokenReward = {};
 
@@ -25,8 +21,6 @@ const Dashboard = ({ rewards = [], pools = [] }) => {
         reducedTokenReward = { ...reducedTokenReward, [symbol]: amount };
       }
     });
-
-    setReducedRewards(reducedTokenReward);
 
     // let reducedRewardChart;
     const ctx = document.getElementById("token-reward").getContext("2d");
@@ -52,7 +46,8 @@ const Dashboard = ({ rewards = [], pools = [] }) => {
   const buildDepositChart = () => {
     let reducedTokenDeposit = {};
 
-    pools.forEach(({ id, entryFee, token: { symbol } }) => {
+    pools.forEach(({ id, status, entryFee, token: { symbol } }) => {
+      if (status === "CANCELLED") return;
       if (reducedTokenDeposit[symbol]) {
         const prevAmount = reducedTokenDeposit[symbol];
         reducedTokenDeposit = {
@@ -63,8 +58,6 @@ const Dashboard = ({ rewards = [], pools = [] }) => {
         reducedTokenDeposit = { ...reducedTokenDeposit, [symbol]: entryFee };
       }
     });
-
-    setReducedDeposits(reducedTokenDeposit);
 
     // let reducedRewardChart;
     const ctx = document.getElementById("token-deposit").getContext("2d");
@@ -111,6 +104,7 @@ const Dashboard = ({ rewards = [], pools = [] }) => {
     buildRewardChart();
     buildDepositChart();
     buildWinLossChart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

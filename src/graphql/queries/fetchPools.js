@@ -19,13 +19,13 @@ export const FETCH_ALL_POOLS = gql`
   }
 `;
 
-export const FECTH_STATUS_POOL = gql`
+export const FETCH_STATUS_POOL = gql`
   query (
     $status: String
     $orderBy: BigInt
     $orderDirection: String
-    $first: BigInt
-    $skip: BigInt
+    $first: Int
+    $skip: Int
   ) {
     pools(
       where: { status: $status }

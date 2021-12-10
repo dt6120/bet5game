@@ -19,6 +19,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "@walletconnect/web3-provider": "^1.6.6",
     "bootstrap": "^5.1.3",
     "chart.js": "^3.6.2",
     "eth-provider": "^0.9.8",
@@ -68,7 +69,10 @@
     "solidity-coverage": "^0.7.17"
   },
   "scripts": {
-    "deploy-mumbai": "npx hardhat deploy --network mumbai --export ./src/ethereum/artifacts.json",
+    "deploy": "npx hardhat deploy --network mumbai --export ./src/ethereum/artifacts.json",
+    "create": "npx hardhat run scripts/createPool.js --network mumbai",
+    "enter": "npx hardhat run scripts/enterPool.js --network mumbai",
+    "perform-upkeep": "npx hardhat run scripts/performUpkeep.js --network mumbai",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

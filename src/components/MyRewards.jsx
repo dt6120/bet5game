@@ -7,18 +7,14 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Pagination from "@mui/material/Pagination";
 import TextField from "@mui/material/TextField";
-import Skeleton from "@mui/material/Skeleton";
 import IconButton from "@mui/material/IconButton";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
 import CardActionArea from "@mui/material/CardActionArea";
-import CardContent from "@mui/material/CardContent";
 import Avatar from "@mui/material/Avatar";
 import { blue } from "@mui/material/colors";
 
 import SortIcon from "@mui/icons-material/Sort";
-
-import PoolCard from "../components/PoolCard";
 
 const MyRewards = ({ rewards }) => {
   const navigate = useNavigate();
@@ -27,7 +23,8 @@ const MyRewards = ({ rewards }) => {
   const [activePage, setActivePage] = useState(1);
   const [findPoolId, setFindPoolId] = useState("");
 
-  const [first, setFirst] = useState(15);
+  const first = 15;
+
   const [skip, setSkip] = useState(0);
   const [orderDirection, setOrderDirection] = useState("desc");
 
@@ -37,6 +34,7 @@ const MyRewards = ({ rewards }) => {
         orderDirection === "desc" ? y.poolId - x.poolId : x.poolId - y.poolId
       )
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderDirection]);
 
   return (
@@ -121,7 +119,6 @@ const MyRewards = ({ rewards }) => {
             </Grid>
           ))}
       </Grid>
-      {/* </Grid> */}
     </>
   );
 };

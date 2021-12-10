@@ -9,9 +9,6 @@ import CardHeader from "@mui/material/CardHeader";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import Avatar from "@mui/material/Avatar";
-import Grow from "@mui/material/Grow";
-import Button from "@mui/material/Button";
-import CardActions from "@mui/material/CardActions";
 import { red, blue, green } from "@mui/material/colors";
 
 import DepositIcon from "@mui/icons-material/AccountBalance";
@@ -32,7 +29,6 @@ const PoolCard = ({
   const [contentShow, setContentShow] = useState(false);
 
   return (
-    // <Card onClick={() => navigate(`/pools/${id}`)}>
     <Card
       onClick={() => navigate(`/pools/${id}`)}
       onMouseOver={() => setContentShow(true)}
@@ -86,11 +82,7 @@ const PoolCard = ({
           }
         />
         {contentShow && (
-          <Grow
-            in={contentShow}
-            style={{ transformOrigin: "0 0 0" }}
-            {...(contentShow ? { timeout: 1000 } : {})}
-          >
+          <>
             <CardContent>
               <List>
                 <ListItem>
@@ -105,7 +97,7 @@ const PoolCard = ({
                 </ListItem>
               </List>
             </CardContent>
-          </Grow>
+          </>
         )}
       </CardActionArea>
     </Card>

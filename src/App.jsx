@@ -12,8 +12,8 @@ import en from "javascript-time-ago/locale/en.json";
 import { connectWallet, update } from "./redux/user/walletSlice";
 import { updateNotif } from "./redux/pool/configSlice";
 import { fetchPoolConfig } from "./redux/pool/configSlice";
-import { wssProvider } from "./ethereum/getProvider";
-import { poolContractWithProvider } from "./ethereum/getContracts";
+import { wssPoolContract } from "./ethereum/getContracts";
+import addNetwork from "./ethereum/addNetwork";
 
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -30,11 +30,11 @@ const App = () => {
   const handleChainChanged = () => {
     if (window.ethereum) {
       if (Number(window.ethereum.chainId) !== 80001) {
-        toast.error("Connect to Polygon Mumbai network");
+        addNetwork().catch((error) => toast.error(error.message));
       }
       window.ethereum.on("chainChanged", (chainId) => {
         if (Number(chainId) !== 80001) {
-          toast.error("Connect to Polygon Mumbai network");
+          addNetwork().catch((error) => toast.error(error.message));
         }
       });
     }
@@ -53,11 +53,9 @@ const App = () => {
     );
   };
 
-  const handleNotifUpdate = async () => {
+  const handleNotifUpdate = () => {
     try {
-      const poolContract = poolContractWithProvider(wssProvider);
-
-      poolContract.on("PoolCreated", (data) => {
+      wssPoolContract.on("PoolCreated", (data) => {
         dispatch(
           updateNotif({
             poolId: Number(data),
@@ -66,7 +64,7 @@ const App = () => {
         );
       });
 
-      poolContract.on("PoolCancelled", (data) => {
+      wssPoolContract.on("PoolCancelled", (data) => {
         dispatch(
           updateNotif({
             poolId: Number(data),
@@ -86,12 +84,14 @@ const App = () => {
     handleAccountChange();
     handleChainChanged();
     handleNotifUpdate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (error) {
       dispatch(fetchPoolConfig());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");

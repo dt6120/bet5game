@@ -3,16 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import Countdown from "react-countdown";
 import { toast } from "react-toastify";
-import { ethers } from "ethers";
 
 import { enterPool, fetchPoolData } from "../redux/pool/poolSlice";
-import getAggregatorData from "../ethereum/getAggregatorData";
-import { poolContract } from "../ethereum/getContracts";
+import { wssPoolContract, poolContract } from "../ethereum/getContracts";
 
 import PoolTable from "../components/PoolTable";
 import PoolInfo from "../components/PoolInfo";
 
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -22,16 +19,15 @@ import Alert from "@mui/material/Alert";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
+import Divider from "@mui/material/Divider";
 import CircularProgress from "@mui/material/CircularProgress";
-import LinearProgress from "@mui/material/LinearProgress";
-import TextField from "@mui/material/TextField";
-import Chip from "@mui/material/Chip";
 import Backdrop from "@mui/material/Backdrop";
+import FormGroup from "@mui/material/FormGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+
+import mumbaiAggregators from "../ethereum/mumbaiAggregators.json";
 
 const Pool = () => {
   const { id: poolId } = useParams();
@@ -47,22 +43,18 @@ const Pool = () => {
     txLoading,
     txHash,
   } = poolState;
-  const {
-    minEntryCount,
-    maxEntryCount,
-    fee,
-    poolEntryInterval,
-    poolStartInterval,
-    poolDuration,
-  } = config.data;
+  const { minEntryCount, maxEntryCount, poolEntryInterval } = config.data;
 
+  // const [selectOptions, setSelectOptions] = useState(
+  //   Object.keys(mumbaiAggregators)
+  // );
   const [formOpen, setFormOpen] = useState(false);
   // const [acceptingEntries, setAcceptingEntries] = useState(true);
 
   // CREATE, ENTRY, START, COMPLETE, CANCLLED
   // const [phase, setPhase] = useState(0);
 
-  const [currentToken, setCurrentToken] = useState("");
+  // const [currentToken, setCurrentToken] = useState("");
   const [selectedTokens, setSelectedTokens] = useState([]);
 
   const [backdropOpen, setBackdropOpen] = useState(false);
@@ -79,27 +71,35 @@ const Pool = () => {
     setFormOpen(true);
   };
 
-  const handleTokenAdd = async () => {
-    try {
-      const { roundPrice } = await getAggregatorData(currentToken);
-      setSelectedTokens([
-        ...selectedTokens,
-        { price: roundPrice, address: currentToken },
-      ]);
-    } catch (error) {
-      toast.error("Invalid aggregator address");
-    }
+  const handleTokenSelect = (checked, pair) => {
+    // const { roundPrice } = await getAggregatorData(currentToken);
+    // setCurrentToken("");
+    // setSelectOptions(Object.keys(mumbaiAggregators));
+    checked
+      ? setSelectedTokens([...selectedTokens, mumbaiAggregators[pair]])
+      : setSelectedTokens(
+          selectedTokens.filter(
+            (address) => address !== mumbaiAggregators[pair]
+          )
+        );
   };
 
-  const handleTokenDelete = (id) => {
-    setSelectedTokens(selectedTokens.filter((token, index) => index !== id));
-  };
+  // const handleTokenSearch = (e) => {
+  //   const searchFor = e.target.value;
+  //   setCurrentToken(searchFor);
+
+  //   setSelectOptions(
+  //     Object.keys(mumbaiAggregators).filter((pair) =>
+  //       pair.toLocaleLowerCase().includes(searchFor.toLocaleLowerCase())
+  //     )
+  //   );
+  // };
 
   const handleEnterPool = () => {
     dispatch(
       enterPool({
         id: poolId,
-        tokens: selectedTokens.map(({ address }) => address),
+        tokens: selectedTokens,
       })
     );
   };
@@ -115,7 +115,7 @@ const Pool = () => {
     setBackdropOpen(true);
     setBackdropText("Cancelling pool");
 
-    poolContract.once("PoolCancelled", () => {
+    wssPoolContract.once("PoolCancelled", () => {
       dispatch(fetchPoolData(poolId));
       setBackdropOpen(false);
       setBackdropText("");
@@ -126,7 +126,7 @@ const Pool = () => {
     setBackdropOpen(true);
     setBackdropText("Distributing pool rewards");
 
-    poolContract.once("PoolRewardTransfer", () => {
+    wssPoolContract.once("PoolRewardTransfer", () => {
       dispatch(fetchPoolData(poolId));
       setBackdropOpen(false);
       setBackdropText("");
@@ -177,8 +177,10 @@ const Pool = () => {
   // };
 
   useEffect(() => {
+    // if (!window.ethereum) return navigate("/");
     dispatch(fetchPoolData(poolId));
     // fetchPoolData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poolId]);
 
   // useEffect(() => {
@@ -191,16 +193,18 @@ const Pool = () => {
     if (poolError) {
       return navigate("/");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poolError]);
 
   useEffect(() => {
     if (txHash) {
       setSelectedTokens([]);
-      setCurrentToken("");
+      // setCurrentToken("");
       setFormOpen(false);
 
       dispatch(fetchPoolData(poolId));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txHash]);
 
   return (
@@ -341,16 +345,17 @@ const Pool = () => {
             maxWidth="sm"
           >
             <DialogTitle>Select 5 tokens to enter pool</DialogTitle>
+            <Divider />
             <DialogContent>
-              <TextField
-                label="Aggregator Address"
-                variant="filled"
+              {/* <TextField
+                label="Find by pair name"
+                variant="outlined"
                 value={currentToken}
-                onChange={(e) => setCurrentToken(e.target.value)}
+                onChange={handleTokenSearch}
                 fullWidth
-              />{" "}
-              &nbsp;
-              <Button
+                sx={{ marginTop: 1, marginBottom: 3 }}
+              /> */}
+              {/* <Button
                 variant="contained"
                 color="primary"
                 size="large"
@@ -359,8 +364,29 @@ const Pool = () => {
                 fullWidth
               >
                 Add
-              </Button>
-              <Box sx={{ marginTop: 3, textAlign: "center" }}>
+              </Button> */}
+              <FormGroup row>
+                {Object.keys(mumbaiAggregators).map((pair) => (
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label={pair}
+                    onChange={(e) => handleTokenSelect(e.target.checked, pair)}
+                    sx={{ mx: 1 }}
+                    key={pair}
+                  />
+                ))}
+              </FormGroup>
+              {/* <Box sx={{ marginTop: 3, textAlign: "center" }}>
+                {[].map(({ price, address }, index) => (
+                  <Chip
+                    key={index}
+                    label={`${address} ($${price})`}
+                    onDelete={() => handleTokenDelete(index)}
+                    sx={{ marginRight: 1, marginTop: 1, padding: 1 }}
+                  />
+                ))}
+              </Box> */}
+              {/* <Box sx={{ marginTop: 3, textAlign: "center" }}>
                 {selectedTokens.map(({ price, address }, index) => (
                   <Chip
                     key={index}
@@ -369,7 +395,7 @@ const Pool = () => {
                     sx={{ marginRight: 1, marginTop: 1, padding: 1 }}
                   />
                 ))}
-              </Box>
+              </Box> */}
             </DialogContent>
             <DialogActions>
               <Button

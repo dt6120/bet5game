@@ -115,12 +115,14 @@ const Navbar = () => {
       setCreatePoolOpen(false);
       navigate(`/pools/${createId}`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createId]);
 
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
+          {/** brand - large screen */}
           <Typography
             variant="h6"
             noWrap
@@ -133,7 +135,9 @@ const Navbar = () => {
             </MenuItem>
           </Typography>
 
+          {/** menu - small screen */}
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
+            {/** menu dropdown */}
             <IconButton
               size="large"
               aria-label="account of current user"
@@ -174,6 +178,8 @@ const Navbar = () => {
               ))}
             </Menu>
           </Box>
+
+          {/** brand - small screen */}
           <Typography
             variant="h6"
             noWrap
@@ -185,6 +191,8 @@ const Navbar = () => {
               <Typography sx={{ mx: 3 }}>BET 5 GAME</Typography>
             </MenuItem>
           </Typography>
+
+          {/** menu - large screen */}
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <Button
@@ -200,6 +208,52 @@ const Navbar = () => {
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
+            {/** notification menu */}
+            <IconButton
+              size="large"
+              color="inherit"
+              sx={{ marginRight: 3 }}
+              onClick={(e) => setNotifAnchor(e.currentTarget)}
+            >
+              <Badge badgeContent={notifCount} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+            <Menu
+              anchorEl={notifAnchor}
+              open={Boolean(notifAnchor)}
+              onClose={() => setNotifAnchor(null)}
+            >
+              {notifList.length > 0 ? (
+                notifList.slice(0, 5).map(({ message, timestamp, poolId }) => (
+                  <MenuItem
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      width: "300",
+                    }}
+                    onClick={() => {
+                      setNotifAnchor(null);
+                      navigate(`/pools/${poolId}`);
+                    }}
+                  >
+                    <Typography variant="body1">{message}</Typography>
+                    <Typography variant="caption" sx={{ marginLeft: 5 }}>
+                      <ReactTimeAgo
+                        date={timestamp}
+                        locale="en-US"
+                        timeStyle="round-minute"
+                      />
+                    </Typography>
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem onClick={() => setNotifAnchor(null)}>
+                  No notifications
+                </MenuItem>
+              )}
+            </Menu>
+
             {!address ? (
               <Button
                 variant="contained"
@@ -215,52 +269,6 @@ const Navbar = () => {
               </Button>
             ) : (
               <>
-                <IconButton
-                  size="large"
-                  color="inherit"
-                  sx={{ marginRight: 3 }}
-                  onClick={(e) => setNotifAnchor(e.currentTarget)}
-                >
-                  <Badge badgeContent={notifCount} color="error">
-                    <NotificationsIcon />
-                  </Badge>
-                </IconButton>
-                <Menu
-                  anchorEl={notifAnchor}
-                  open={Boolean(notifAnchor)}
-                  onClose={() => setNotifAnchor(null)}
-                >
-                  {notifList.length > 0 ? (
-                    notifList
-                      .slice(0, 5)
-                      .map(({ message, timestamp, poolId }) => (
-                        <MenuItem
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            width: "300",
-                          }}
-                          onClick={() => {
-                            setNotifAnchor(null);
-                            navigate(`/pools/${poolId}`);
-                          }}
-                        >
-                          <Typography variant="body1">{message}</Typography>
-                          <Typography variant="caption" sx={{ marginLeft: 5 }}>
-                            <ReactTimeAgo
-                              date={timestamp}
-                              locale="en-US"
-                              timeStyle="round-minute"
-                            />
-                          </Typography>
-                        </MenuItem>
-                      ))
-                  ) : (
-                    <MenuItem onClick={() => setNotifAnchor(null)}>
-                      No notifications
-                    </MenuItem>
-                  )}
-                </Menu>
                 {owner && address.toLowerCase() === owner.toLowerCase() && (
                   <Chip
                     avatar={<Avatar alt="Create Pool" src={PlusIcon} />}
@@ -269,9 +277,13 @@ const Navbar = () => {
                     size="large"
                     color="primary"
                     onClick={() => setCreatePoolOpen(true)}
-                    sx={{ marginRight: 3 }}
+                    sx={{
+                      marginRight: 3,
+                    }}
                   />
                 )}
+
+                {/** settings dropdown */}
                 <Tooltip title="Open settings">
                   <Chip
                     avatar={<Avatar alt="User Settings" src={UserAvatar} />}
