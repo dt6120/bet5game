@@ -48,7 +48,7 @@ const PoolCard = ({
                 }`,
               }}
               aria-label="id"
-              variant="circular"
+              variant="rounded"
             >
               {id}
             </Avatar>

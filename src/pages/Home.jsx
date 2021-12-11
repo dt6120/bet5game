@@ -6,7 +6,7 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
-import CardMedia from "@mui/material/CardMedia";
+import Box from "@mui/material/Box";
 import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
 import Avatar from "@mui/material/Avatar";
@@ -26,12 +26,51 @@ import ExploreImage from "../assets/explore.jpg";
 import WinningsImage from "../assets/winnings.jpg";
 import ProfileImage from "../assets/dashboard.jpg";
 
+import StepsImage from "../assets/howToPlay.svg";
+import WinImage from "../assets/winners.svg";
+import ActivityImage from "../assets/dashboard.svg";
+
 import client from "../graphql/client";
 import { FETCH_ALL_POOLS } from "../graphql/queries/fetchPools";
+
+const steps = [
+  {
+    id: "0",
+    text: [
+      "After pool starts, check out the dynamic leaderboard to see your position.",
+      "Users with tokens having the highest price gains, collect more points and rise the leaderboard.",
+      "After pool ends, the pool deposit is distributed amongst the top 3 winners. Pool is cancelled after start time if it has less than 6 user entries.",
+    ],
+  },
+  {
+    id: "1",
+    text: [
+      "Every pool has a start time, end time, entry token and entry fee. Entry to a pool starts 30 minutes before its start time.",
+      "Pool info is available on its details page. To enter the pool, user has to deposit the entry fee in terms of the entry token.",
+      "Then select 5 crypto pairs which they feel will rise the most over the pool duration.",
+    ],
+  },
+  {
+    id: "2",
+    text: [
+      "Check out your profile to see dashboard and complete activity history.",
+      "Dashboard shows various stats and charts to give comprehensive performance data.",
+      "View list of participated pools with their current status info and all the rewards won to date along with reward amount and pool id.",
+    ],
+  },
+];
 
 const Home = () => {
   const navigate = useNavigate();
 
+  const initialDataOrder = [
+    { id: "0", title: "Win prizes", description: "" },
+    { id: "1", title: "How to play", description: "" },
+    { id: "2", title: "View activity", description: "" },
+  ];
+  const [dataOrder, setDataOrder] = useState(initialDataOrder);
+
+  const [activeTab, setActiveTab] = useState("1");
   const [loading, setLoading] = useState(false);
   const [latestPools, setLatestPools] = useState([]);
 
@@ -65,203 +104,76 @@ const Home = () => {
 
   return (
     <>
-      {/* <Container maxWidth="xl" sx={{ marginTop: 5 }}>
+      <Container maxWidth="xl" sx={{ my: 10 }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Paper elevation={3} sx={{ padding: 5 }}>
-              <Typography component="h4" variant="h4" textAlign="center">
-                Find a pool
-              </Typography>
-              <Divider sx={{ my: 3 }} />
-              <Typography component="p" variant="body1">
-                Users can enter a pool to bet on tokens that they think will
-                rise in price the most. Each pool has an entry fee and an entry
-                token. To enter that pool, user has to select 5 crypto tokens
-                and deposit the entry fee. If those
-              </Typography>
-            </Paper>
+          <Grid item xs={12} md={3} sx={{ my: "auto" }}>
+            <List>
+              {dataOrder.map(({ id, title }, index) => (
+                <ListItem
+                  component={Paper}
+                  button
+                  selected={index === 1}
+                  sx={{
+                    py: 3,
+                    px: 3,
+                    my: 1,
+                    borderRadius: 5,
+                  }}
+                  onClick={() => {
+                    setActiveTab(id);
+                    if (index === 1) return;
+                    if (index === 0)
+                      setDataOrder([dataOrder[1], dataOrder[0], dataOrder[2]]);
+                    if (index === 2)
+                      setDataOrder([dataOrder[0], dataOrder[2], dataOrder[1]]);
+                  }}
+                >
+                  <Typography
+                    variant={`${index === 1 ? "h3" : "h7"}`}
+                    // textAlign="center"
+                  >
+                    {title}
+                  </Typography>
+                </ListItem>
+              ))}
+            </List>
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Paper elevation={3} sx={{ padding: 5 }}>
-              <Typography component="h4" variant="h4" textAlign="center">
-                Find a pool
-              </Typography>
-              <Divider sx={{ my: 3 }} />
-              <Typography component="p" variant="body1">
-                Users can enter a pool to bet on tokens that they think will
-                rise in price the most. Each pool has an entry fee and an entry
-                token. To enter that pool, user has to select 5 crypto tokens
-                and deposit the entry fee. If those
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Paper elevation={3} sx={{ padding: 5 }}>
-              <Typography component="h4" variant="h4" textAlign="center">
-                Find a pool
-              </Typography>
-              <Divider sx={{ my: 3 }} />
-              <Typography component="p" variant="body1">
-                Users can enter a pool to bet on tokens that they think will
-                rise in price the most. Each pool has an entry fee and an entry
-                token. To enter that pool, user has to select 5 crypto tokens
-                and deposit the entry fee. If those
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container> */}
-      <Container
-        sx={{
-          marginTop: 10,
-        }}
-      >
-        <Typography component="h4" variant="h4">
-          Platform Highlights
-        </Typography>
-        <Divider sx={{ marginTop: 2, marginBottom: 5 }} />
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={4}>
-            <Card>
-              <CardHeader
-                avatar={
-                  <Avatar sx={{ bgcolor: orange[500] }}>
-                    <ExploreIcon />
-                  </Avatar>
+          <Grid item xs={12} md={0.5}></Grid>
+          <Grid item xs={12} md={8.5}>
+            <List
+              component={Paper}
+              sx={{ mt: 1, display: "flex", borderRadius: 5 }}
+            >
+              <img
+                src={
+                  activeTab === "0"
+                    ? WinImage
+                    : activeTab === "1"
+                    ? StepsImage
+                    : ActivityImage
                 }
-                // action={
-                //   <IconButton aria-label="settings">
-                //     <MoreVertIcon />
-                //   </IconButton>
-                // }
-                title="Explore pools"
-                subheader=""
+                alt="Steps"
+                height="300"
+                width="300"
+                style={{ marginLeft: 40 }}
               />
-              <CardMedia
-                component="img"
-                height="250"
-                image={ExploreImage}
-                alt="Explore pools"
-              />
-              <CardContent>
-                <List>
-                  <ListItem>
-                    Every pool has a start time, end time, entry token and entry
-                    fee.
+              <Box>
+                {steps[Number(activeTab)].text.map((step, index) => (
+                  <ListItem sx={{ ml: 3, display: "flex" }}>
+                    <Avatar variant="rounded" sx={{ bgcolor: orange[500] }}>
+                      {index + 1}
+                    </Avatar>
+                    <Typography variant="h6" sx={{ my: 1, pl: 2, pr: 10 }}>
+                      {step}
+                    </Typography>
                   </ListItem>
-                  <ListItem>
-                    Entry to a pool starts 30 minutes before its start time and
-                    closes after start time. Pool info is available on its
-                    details page.
-                  </ListItem>
-                  <ListItem>
-                    To enter the pool, user has to deposit the entry fee in
-                    terms of the entry token.
-                  </ListItem>
-                  <ListItem>
-                    Then select 5 crypto pairs which they feel will rise the
-                    most over the pool duration.
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6} lg={4}>
-            <Card>
-              <CardHeader
-                avatar={
-                  <Avatar sx={{ bgcolor: orange[500] }} aria-label="winnings">
-                    <StarsIcon />
-                  </Avatar>
-                }
-                // action={
-                //   <IconButton aria-label="settings">
-                //     <MoreVertIcon />
-                //   </IconButton>
-                // }
-                title="Huge winnings"
-                subheader="Stand a chance to win pool rewards"
-              />
-              <CardMedia
-                component="img"
-                height="250"
-                image={WinningsImage}
-                alt="Winnings"
-              />
-              <CardContent>
-                <List>
-                  <ListItem>
-                    After pool starts, check out the dynamic leaderboard to see
-                    your position.
-                  </ListItem>
-                  <ListItem>
-                    Users with tokens having the highest price gains, collect
-                    more points and rise the leaderboard.
-                  </ListItem>
-                  <ListItem>
-                    After pool ends, the pool deposit is distributed amongst the
-                    top 3 winners.
-                  </ListItem>
-                  <ListItem>
-                    Pool is cancelled after start time if it has less than 6
-                    user entries.
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6} lg={4}>
-            <Card>
-              <CardHeader
-                avatar={
-                  <Avatar sx={{ bgcolor: orange[500] }} aria-label="explore">
-                    <DashboardIcon />
-                  </Avatar>
-                }
-                // action={
-                //   <IconButton aria-label="settings">
-                //     <MoreVertIcon />
-                //   </IconButton>
-                // }
-                title="Activity History"
-                subheader="Informative view of past activities"
-              />
-              <CardMedia
-                component="img"
-                height="250"
-                image={ProfileImage}
-                alt="Explore pools"
-              />
-              <CardContent>
-                <List>
-                  <ListItem>
-                    Check out your profile to see dashboard and complete
-                    activity history.
-                  </ListItem>
-                  <ListItem>
-                    Dashboard shows various stats and charts to give
-                    comprehensive performance data.
-                  </ListItem>
-                  <ListItem>
-                    View list of participated pools with their current status
-                    info.
-                  </ListItem>
-                  <ListItem>
-                    View list of all the rewards won to date along with reward
-                    amount and pool id.
-                  </ListItem>
-                </List>
-              </CardContent>
-              {/* <CardActions>
-                    <Button size="small" onClick={() => navigate("/profile")}>
-                      Profile
-                    </Button>
-                  </CardActions> */}
-            </Card>
+                ))}
+              </Box>
+            </List>
           </Grid>
         </Grid>
       </Container>
-      <Container sx={{ marginTop: 10, marginBottom: 10 }}>
+      <Container sx={{ my: 10 }}>
         <Typography component="h4" variant="h4">
           Latest Pools
         </Typography>
@@ -296,7 +208,7 @@ const Home = () => {
                               }`,
                             }}
                             aria-label="id"
-                            variant="circular"
+                            variant="rounded"
                           >
                             {id}
                           </Avatar>

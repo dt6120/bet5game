@@ -252,6 +252,7 @@ const Explore = () => {
               }}
               page={activePage}
               sx={{ paddingTop: 2 }}
+              shape="rounded"
             />
           </Box>
           <Divider sx={{ marginTop: 3, marginBottom: 3 }} />
