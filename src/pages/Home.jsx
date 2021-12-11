@@ -10,11 +10,17 @@ import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
 import Avatar from "@mui/material/Avatar";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 
-import { red, blue, green } from "@mui/material/colors";
+import ExploreIcon from "@mui/icons-material/Search";
+import StarsIcon from "@mui/icons-material/Stars";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+
+import { red, blue, green, orange } from "@mui/material/colors";
 
 import ExploreImage from "../assets/explore.jpg";
 import WinningsImage from "../assets/winnings.jpg";
@@ -59,7 +65,7 @@ const Home = () => {
 
   return (
     <>
-      <Container maxWidth="xl" sx={{ marginTop: 5 }}>
+      {/* <Container maxWidth="xl" sx={{ marginTop: 5 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 5 }}>
@@ -104,7 +110,7 @@ const Home = () => {
             </Paper>
           </Grid>
         </Grid>
-      </Container>
+      </Container> */}
       <Container
         sx={{
           marginTop: 10,
@@ -118,16 +124,18 @@ const Home = () => {
           <Grid item xs={12} md={6} lg={4}>
             <Card>
               <CardHeader
-                // avatar={
-                //   <Avatar src={} />
-                // }
+                avatar={
+                  <Avatar sx={{ bgcolor: orange[500] }}>
+                    <ExploreIcon />
+                  </Avatar>
+                }
                 // action={
                 //   <IconButton aria-label="settings">
                 //     <MoreVertIcon />
                 //   </IconButton>
                 // }
                 title="Explore pools"
-                subheader="Select pools based upon entry fee, pool prized"
+                subheader=""
               />
               <CardMedia
                 component="img"
@@ -136,26 +144,34 @@ const Home = () => {
                 alt="Explore pools"
               />
               <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Placeat amet nesciunt similique in nihil id illum, odit
-                  necessitatibus excepturi, cumque tenetur, odio blanditiis
-                  suscipit laborum. Debitis non eos autem mollitia.
-                </Typography>
+                <List>
+                  <ListItem>
+                    Every pool has a start time, end time, entry token and entry
+                    fee.
+                  </ListItem>
+                  <ListItem>
+                    Entry to a pool starts 30 minutes before its start time and
+                    closes after start time. Pool info is available on its
+                    details page.
+                  </ListItem>
+                  <ListItem>
+                    To enter the pool, user has to deposit the entry fee in
+                    terms of the entry token.
+                  </ListItem>
+                  <ListItem>
+                    Then select 5 crypto pairs which they feel will rise the
+                    most over the pool duration.
+                  </ListItem>
+                </List>
               </CardContent>
-              {/* <CardActions>
-                    <Button size="small" onClick={() => navigate("/explore")}>
-                      Explore
-                    </Button>
-                  </CardActions> */}
             </Card>
           </Grid>
           <Grid item xs={12} md={6} lg={4}>
             <Card>
               <CardHeader
                 avatar={
-                  <Avatar sx={{ bgcolor: red[500] }} aria-label="winnings">
-                    2
+                  <Avatar sx={{ bgcolor: orange[500] }} aria-label="winnings">
+                    <StarsIcon />
                   </Avatar>
                 }
                 // action={
@@ -173,25 +189,33 @@ const Home = () => {
                 alt="Winnings"
               />
               <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Placeat amet nesciunt similique in nihil id illum, odit
-                  necessitatibus excepturi, cumque tenetur, odio blanditiis
-                  suscipit laborum. Debitis non eos autem mollitia.
-                </Typography>
+                <List>
+                  <ListItem>
+                    After pool starts, check out the dynamic leaderboard to see
+                    your position.
+                  </ListItem>
+                  <ListItem>
+                    Users with tokens having the highest price gains, collect
+                    more points and rise the leaderboard.
+                  </ListItem>
+                  <ListItem>
+                    After pool ends, the pool deposit is distributed amongst the
+                    top 3 winners.
+                  </ListItem>
+                  <ListItem>
+                    Pool is cancelled after start time if it has less than 6
+                    user entries.
+                  </ListItem>
+                </List>
               </CardContent>
-              {/* <CardActions>
-                    <Button size="small">View All</Button>
-                    <Button size="small">View Upcoming</Button>
-                  </CardActions> */}
             </Card>
           </Grid>
           <Grid item xs={12} md={6} lg={4}>
             <Card>
               <CardHeader
                 avatar={
-                  <Avatar sx={{ bgcolor: red[500] }} aria-label="explore">
-                    3
+                  <Avatar sx={{ bgcolor: orange[500] }} aria-label="explore">
+                    <DashboardIcon />
                   </Avatar>
                 }
                 // action={
@@ -209,12 +233,24 @@ const Home = () => {
                 alt="Explore pools"
               />
               <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Placeat amet nesciunt similique in nihil id illum, odit
-                  necessitatibus excepturi, cumque tenetur, odio blanditiis
-                  suscipit laborum. Debitis non eos autem mollitia.
-                </Typography>
+                <List>
+                  <ListItem>
+                    Check out your profile to see dashboard and complete
+                    activity history.
+                  </ListItem>
+                  <ListItem>
+                    Dashboard shows various stats and charts to give
+                    comprehensive performance data.
+                  </ListItem>
+                  <ListItem>
+                    View list of participated pools with their current status
+                    info.
+                  </ListItem>
+                  <ListItem>
+                    View list of all the rewards won to date along with reward
+                    amount and pool id.
+                  </ListItem>
+                </List>
               </CardContent>
               {/* <CardActions>
                     <Button size="small" onClick={() => navigate("/profile")}>

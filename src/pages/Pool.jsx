@@ -113,7 +113,7 @@ const Pool = () => {
     }
 
     setBackdropOpen(true);
-    setBackdropText("Cancelling pool");
+    setBackdropText("Cancelling pool due to insufficient entries");
 
     wssPoolContract.once("PoolCancelled", () => {
       dispatch(fetchPoolData(poolId));
@@ -214,6 +214,9 @@ const Pool = () => {
           sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
           open={poolLoading}
         >
+          <Typography component="h4" variant="h4" sx={{ marginRight: 3 }}>
+            Loading pool
+          </Typography>
           <CircularProgress color="inherit" />
         </Backdrop>
       ) : backdropOpen ? (

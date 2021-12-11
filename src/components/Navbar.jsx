@@ -28,12 +28,14 @@ import Badge from "@mui/material/Badge";
 import CircularProgress from "@mui/material/CircularProgress";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 
+import Logo from "@mui/icons-material/Attractions";
+
 import PlusIcon from "../assets/plus.png";
-import Logo from "../assets/logo.png";
+// import Logo from "../assets/logo.png";
 import UserAvatar from "../assets/avatar.png";
 import getTokenData from "../ethereum/getTokenData";
 
-const pages = ["Explore", "Profile"];
+const pages = ["Explore", "Profile", "How To Play"];
 const settings = ["Profile"];
 
 const Navbar = () => {
@@ -130,8 +132,9 @@ const Navbar = () => {
             sx={{ mr: 2, display: { xs: "none", md: "flex" } }}
           >
             <MenuItem onClick={() => navigate("/")}>
-              <img src={Logo} alt="" width="40" height="40" />{" "}
-              <Typography sx={{ mx: 3 }}>BET 5 GAME</Typography>
+              {/* <img src={Logo} alt="" width="40" height="40" />{" "} */}
+              <Logo fontSize="large" />
+              <Typography sx={{ ml: 1, mr: 5 }}>BET 5 GAME</Typography>
             </MenuItem>
           </Typography>
 
@@ -170,7 +173,9 @@ const Navbar = () => {
                 <MenuItem key={page} onClick={handleCloseNavMenu}>
                   <Typography
                     textAlign="center"
-                    onClick={() => navigate(`/${page.toLowerCase()}`)}
+                    onClick={() =>
+                      navigate(`/${page.replaceAll(" ", "-").toLowerCase()}`)
+                    }
                   >
                     {page}
                   </Typography>
@@ -187,7 +192,8 @@ const Navbar = () => {
             sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}
           >
             <MenuItem onClick={() => navigate("/")}>
-              <img src={Logo} alt="" width="40" height="40" />{" "}
+              {/* <img src={Logo} alt="" width="40" height="40" />{" "} */}
+              <Logo fontSize="large" />
               <Typography sx={{ mx: 3 }}>BET 5 GAME</Typography>
             </MenuItem>
           </Typography>
@@ -200,7 +206,11 @@ const Navbar = () => {
                 onClick={handleCloseNavMenu}
                 sx={{ my: 2, color: "white", display: "block" }}
               >
-                <MenuItem onClick={() => navigate(`/${page.toLowerCase()}`)}>
+                <MenuItem
+                  onClick={() =>
+                    navigate(`/${page.replaceAll(" ", "-").toLowerCase()}`)
+                  }
+                >
                   {page}
                 </MenuItem>
               </Button>
