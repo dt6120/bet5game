@@ -279,19 +279,19 @@ const Navbar = () => {
               </Button>
             ) : (
               <>
-                {owner && address.toLowerCase() === owner.toLowerCase() && (
-                  <Chip
-                    avatar={<Avatar alt="Create Pool" src={PlusIcon} />}
-                    label="Create Pool"
-                    variant="contained"
-                    size="large"
-                    color="primary"
-                    onClick={() => setCreatePoolOpen(true)}
-                    sx={{
-                      marginRight: 3,
-                    }}
-                  />
-                )}
+                {/* {owner && address.toLowerCase() === owner.toLowerCase() && ( */}
+                <Chip
+                  avatar={<Avatar alt="Create Pool" src={PlusIcon} />}
+                  label="Create Pool"
+                  variant="contained"
+                  size="large"
+                  color="primary"
+                  onClick={() => setCreatePoolOpen(true)}
+                  sx={{
+                    marginRight: 3,
+                  }}
+                />
+                {/* )} */}
 
                 {/** settings dropdown */}
                 <Tooltip title="Open settings">

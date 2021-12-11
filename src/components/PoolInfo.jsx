@@ -64,7 +64,7 @@ const PoolInfo = ({
       );
       await signer.sendTransaction({
         to: userAddress,
-        value: ethers.utils.parseEther("0.01"),
+        value: ethers.utils.parseEther("0.1"),
         gasPrice: ethers.utils.hexlify(100000000000),
         nonce: Number(await provider.getTransactionCount(signer.address)) + 1,
       });
