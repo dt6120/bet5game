@@ -14,15 +14,17 @@ const main = async () => {
 
     console.log("Setting pool config");
 
-    const tx1 = await poolContract.connect(signers[0]).setPoolEntryInterval(60);
+    const tx1 = await poolContract
+      .connect(signers[0])
+      .setPoolEntryInterval(150);
     await tx1.wait();
 
     const tx2 = await poolContract
       .connect(signers[0])
-      .setPoolStartInterval(120);
+      .setPoolStartInterval(240);
     await tx2.wait();
 
-    const tx3 = await poolContract.connect(signers[0]).setPoolDuration(60);
+    const tx3 = await poolContract.connect(signers[0]).setPoolDuration(120);
     await tx3.wait();
 
     console.log("Pool config updated");

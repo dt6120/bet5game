@@ -51,7 +51,7 @@ describe("Bet5Game", () => {
     MIN_ENTRY_COUNT = Number(await poolContract.MIN_ENTRY_COUNT());
   });
 
-  describe.skip("deployment", () => {
+  describe("deployment", () => {
     it("contract configured correctly", async () => {
       expect(token.address).to.be.properAddress;
       expect(poolContract.address).to.be.properAddress;
@@ -59,7 +59,7 @@ describe("Bet5Game", () => {
     });
   });
 
-  describe.skip("createPool", () => {
+  describe("createPool", () => {
     describe("with invalid entry fee", () => {
       it("throws an error", async () => {
         // const startTime = ethers.BigNumber.from(Math.round(Date.now() / 1000));
@@ -114,7 +114,7 @@ describe("Bet5Game", () => {
     });
   });
 
-  describe.skip("enterPool", () => {
+  describe("enterPool", () => {
     describe("before entry time", () => {
       it("throws an error", async () => {
         const [, user] = signers;
@@ -131,11 +131,11 @@ describe("Bet5Game", () => {
     describe("within entry time", () => {
       before(async () => {
         await ethers.provider.send("evm_increaseTime", [
-          POOL_START_INTERVAL - 100,
+          POOL_START_INTERVAL - 10,
         ]);
       });
 
-      it("adds user entry to pool", async () => {
+      it.skip("adds user entry to pool", async () => {
         const [, user] = signers;
 
         const poolId = await poolContract.poolCounter();
@@ -173,7 +173,7 @@ describe("Bet5Game", () => {
     });
   });
 
-  describe("cancelPool", () => {
+  describe.skip("cancelPool", () => {
     let poolId;
 
     before(async () => {
