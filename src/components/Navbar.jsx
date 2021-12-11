@@ -35,7 +35,7 @@ import PlusIcon from "../assets/plus.png";
 import UserAvatar from "../assets/avatar.png";
 import getTokenData from "../ethereum/getTokenData";
 
-const pages = ["Explore", "Profile", "How To Play"];
+const pages = ["How To Play", "Explore", "Profile"];
 const settings = ["Profile"];
 
 const Navbar = () => {
