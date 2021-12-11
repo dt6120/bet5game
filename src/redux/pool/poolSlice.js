@@ -2,7 +2,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // import WalletConnectProvider from "@walletconnect/web3-provider";
 import { ethers } from "ethers";
 import { httpsProvider as provider } from "../../ethereum/getProvider";
-import { poolContract, tokenContract } from "../../ethereum/getContracts";
+import {
+  poolContract,
+  tokenContractWithAddress,
+} from "../../ethereum/getContracts";
 import getTokenData from "../../ethereum/getTokenData";
 import { toast } from "react-toastify";
 
@@ -56,7 +59,7 @@ export const fetchPoolData = createAsyncThunk(
 
 export const enterPool = createAsyncThunk(
   "pool/enter",
-  async ({ id, tokens }, { rejectWithValue }) => {
+  async ({ id, token, tokens }, { rejectWithValue }) => {
     try {
       if (tokens.length !== 5) {
         return rejectWithValue("Select 5 tokens to enter");
@@ -67,13 +70,13 @@ export const enterPool = createAsyncThunk(
       }
       const signer = provider.getSigner();
 
-      const allowance = await tokenContract.allowance(
+      const allowance = await tokenContractWithAddress(token).allowance(
         provider.provider.selectedAddress,
         poolContract.address
       );
       const entryFee = (await poolContract.pools(id)).entryFee;
       if (allowance < entryFee) {
-        const apprTx = await tokenContract
+        const apprTx = await tokenContractWithAddress(token)
           .connect(signer)
           .approve(
             poolContract.address,

@@ -99,6 +99,7 @@ const Pool = () => {
     dispatch(
       enterPool({
         id: poolId,
+        token: pool.token.address,
         tokens: selectedTokens,
       })
     );

@@ -17,12 +17,12 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
     uint8 public constant MAX_ENTRY_COUNT = 30;
     uint8 public constant NUM_USER_SELECTION = 5;
     uint16 public constant FEE = 500;
-    uint256 public POOL_ENTRY_INTERVAL = 5 minutes; // 30 minutes;
-    uint256 public POOL_START_INTERVAL = 10 minutes; // 1 days;
-    uint256 public POOL_DURATION = 10 minutes; // 1 days;
+
+    uint256 public POOL_ENTRY_INTERVAL = 30 minutes;
+    uint256 public POOL_START_INTERVAL = 60 minutes;
+    uint256 public POOL_DURATION = 60 minutes;
 
     // --------------------- TEST FUNCTIONS --------------------
-    // ---------------- DO NOT USE IN PRODUCTION ---------------
 
     function setPoolEntryInterval(uint256 _poolEntryInterval)
         external
