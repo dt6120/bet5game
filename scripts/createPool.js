@@ -17,7 +17,7 @@ const main = async () => {
     const entryFee = "1000000000000000000000";
     const tx = await poolContract
       .connect(signers[0])
-      .createPool(entryFee, "0xf3052Ac27F270595b6EF9164b4EA130df3c848E2");
+      .createPool(entryFee, "0x24f4f44abd6540c31fc7063386e50ef8ac80a491");
     await tx.wait();
 
     const poolId = await poolContract.poolCounter();
