@@ -22,7 +22,7 @@ const main = async () => {
       const tx = await poolContract
         .connect(signers[i])
         .enterPool(
-          poolId,
+          "7",
           [
             aggregators[Math.floor(Math.random() * 10)],
             aggregators[Math.floor(Math.random() * 10)],

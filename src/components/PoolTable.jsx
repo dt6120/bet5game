@@ -80,7 +80,7 @@ const PoolTable = ({ poolId, status, startTime, token, entries }) => {
               <strong>No user entries for this pool</strong>
             </Alert>
           ) : (
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ marginBottom: 10 }}>
               <Table>
                 <TableHead>
                   <TableRow>

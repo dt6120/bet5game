@@ -4,7 +4,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   await deploy("Token", {
     from: deployer,
-    args: ["Token", "TOKEN"],
+    args: ["AAVE Token", "AAVE"],
     log: true,
   });
 };

@@ -18,11 +18,11 @@ const main = async () => {
     const poolId = await poolContract.poolCounter();
     console.log(`Entering pool ${poolId}`);
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 3; i < 9; i++) {
       const tx = await poolContract
         .connect(signers[i])
         .enterPool(
-          poolId,
+          "2",
           [
             aggregators[Math.floor(Math.random() * 10)],
             aggregators[Math.floor(Math.random() * 10)],

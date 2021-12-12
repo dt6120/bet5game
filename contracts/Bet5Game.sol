@@ -102,7 +102,7 @@ contract Bet5Game is Ownable, ReentrancyGuard, KeeperCompatibleInterface {
         @param _entryFee amount of accepted tokens to be deposited by user to enter pool
         @param _token accepted token of the pool in terms of which the entry fee is based
      */
-    function createPool(uint256 _entryFee, address _token) external onlyOwner {
+    function createPool(uint256 _entryFee, address _token) external {
         require(_entryFee > 0, "Increase entry fee");
         require(
             bytes(ERC20(_token).name()).length > 0,

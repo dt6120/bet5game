@@ -51,7 +51,7 @@ module.exports = {
     },
 
     mumbai: {
-      url: process.env.ALCHEMY_MUMBAI_RPC_URL,
+      url: process.env.MORALIS_MUMBAI_RPC_URL,
       chainId: 80001,
       accounts: {
         mnemonic: process.env.MNEMONIC,

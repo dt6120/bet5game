@@ -52,33 +52,35 @@ const Profile = () => {
         query: FECTH_USER_POOLS,
         variables: { address },
       });
-      setPools(
-        await Promise.all(
-          users[0].pools.map(
-            async ({
-              id,
-              status,
-              startTime,
-              endTime,
-              entryCount,
-              entryFee,
-              token: address,
-            }) => {
-              const { symbol, decimals } = await getTokenData(address);
-
-              return {
-                id: Number(id),
+      if (users[0]) {
+        setPools(
+          await Promise.all(
+            users[0].pools.map(
+              async ({
+                id,
                 status,
-                startTime: Number(startTime),
-                endTime: Number(endTime),
-                entryCount: Number(entryCount),
-                entryFee: ethers.utils.formatUnits(entryFee, decimals),
-                token: { address, symbol },
-              };
-            }
+                startTime,
+                endTime,
+                entryCount,
+                entryFee,
+                token: address,
+              }) => {
+                const { symbol, decimals } = await getTokenData(address);
+
+                return {
+                  id: Number(id),
+                  status,
+                  startTime: Number(startTime),
+                  endTime: Number(endTime),
+                  entryCount: Number(entryCount),
+                  entryFee: ethers.utils.formatUnits(entryFee, decimals),
+                  token: { address, symbol },
+                };
+              }
+            )
           )
-        )
-      );
+        );
+      }
 
       const {
         data: { rewards },

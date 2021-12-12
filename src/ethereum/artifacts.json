@@ -3,7 +3,7 @@
   "chainId": "80001",
   "contracts": {
     "Bet5Game": {
-      "address": "0x1c093C6d100a0D544d241633A0AA50b78330b31C",
+      "address": "0x028a96397B3cD8e205aF2aa44C420CC2B75725e9",
       "abi": [
         {
           "inputs": [],
@@ -705,7 +705,7 @@
       ]
     },
     "Token": {
-      "address": "0xd46A7beFf9c456c759bC6E9378Ee29C990FfC5e0",
+      "address": "0x46fc4EAfFe1c37e65c31b6727Eb020124735687a",
       "abi": [
         {
           "inputs": [
