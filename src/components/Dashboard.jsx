@@ -35,7 +35,13 @@ const Dashboard = ({ rewards = [], pools = [] }) => {
           {
             data: Object.values(reducedTokenReward),
             fill: true,
-            borderColor: "rgb(75, 192, 192)",
+            borderColor: [
+              "rgb(255, 204, 102)",
+              "rgb(255, 102, 102)",
+              "rgb(0, 204, 102)",
+              "rgb(0, 255, 255)",
+              "rgb(255, 255, 204)",
+            ],
             tension: 0.1,
           },
         ],
@@ -72,7 +78,13 @@ const Dashboard = ({ rewards = [], pools = [] }) => {
           {
             data: Object.values(reducedTokenDeposit),
             fill: true,
-            borderColor: "rgb(75, 192, 192)",
+            borderColor: [
+              "rgb(255, 204, 102)",
+              "rgb(255, 102, 102)",
+              "rgb(0, 204, 102)",
+              "rgb(0, 255, 255)",
+              "rgb(255, 255, 204)",
+            ],
             tension: 0.1,
           },
         ],

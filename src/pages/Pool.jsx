@@ -114,7 +114,7 @@ const Pool = () => {
     }
 
     setBackdropOpen(true);
-    setBackdropText("Cancelling pool due to insufficient entries");
+    setBackdropText("Canceling pool due to insufficient entries");
 
     wssPoolContract.once("PoolCancelled", () => {
       dispatch(fetchPoolData(poolId));
