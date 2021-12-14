@@ -1,70 +1,94 @@
-# Getting Started with Create React App
+# Bet 5 Game Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A betting platform for predicting crypto price movements. Enter pool, predict crypto prices and win up to 15x rewards. Prices are monitored by Chainlink price feeds and rewards distribution is automated by Chainlink Keepers. This is the most reliable, secure, tamper-proof and transparent on-chain betting platform out there.
 
-## Available Scripts
+## Shortcomings of centralized platforms:
+- The results can be manipulated and made to favor a certain party.
+- User funds can be mishandled as there is no way to track or trace activity.
+- User entries can be hidden to show wrong information to users and steal pool deposits.
+- There is no way to know how points are being calculated and if the winners are actually real winners.
 
-In the project directory, you can run:
+## How our platform solves these problems:
+- The Bet 5 platform is decentralized and completely on-chain, making it tamper-proof.
+- Anybody can enter any pool and also view their complete history.
+- All pool funds are stored in the smart contract and their usage is governed by its immutable code.
+- The price data is fetched from ChainLink price feeds and thus cannot be manipulated.
+- The leaderboard is calculated by the smart contract and scores are assigned to users.
+- The score calculation is transparent and winners are decided based upon that score.
+- Rewards distribution is automated by the ChainLink Keeper network.
 
-### `yarn start`
+## Getting Started
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+These instructions will get you a local copy of the project up and running on your local machine for development and testing purposes.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Installing and setting up project
 
-### `yarn test`
+Clone the git repo.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```
+git clone https://github.com/dt6120/bet5game.git bet-5-game
+```
 
-### `yarn build`
+Install dependencies.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+cd bet-5-game
+yarn
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Add env file by copying example.env and filling in your secrets.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+REACT_APP_PRIVATE_KEY=
+REACT_APP_ALCHEMY_MUMBAI_RPC_URL=
+REACT_APP_ALCHEMY_MUMBAI_WSS=
+MNEMONIC=
+```
 
-### `yarn eject`
+### Running Hardhat scripts
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Compile and test the contracts by running the following commands.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+npx hardhat compile
+npx hardhat test
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Various hardhat scripts are written to quickly execute contract functions. As the contracts have been deployed on Polygon Mumbai, add the ```--network``` tag while running the scripts.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```
+npx hardhat run scripts/createPool.js --network mumbai
+```
+```
+npx hardhat run scripts/enterPool.js --network mumbai
+```
 
-## Learn More
+If you wish to deploy a new contract, run the following deploy script.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+npx hardhat deploy --network mumbai --export ./src/ethereum/artifacts.json --tags game
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Starting the React frontend
 
-### Code Splitting
+```
+yarn start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Built With
 
-### Analyzing the Bundle Size
+* Solidity
+* Polygon
+* Hardhat
+* ethers.js
+* The Graph
+* React.js
+* Material-UI
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Authors
 
-### Making a Progressive Web App
+* **Dhruv Takwal**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## License
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License.
